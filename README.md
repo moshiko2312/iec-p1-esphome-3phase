@@ -48,6 +48,8 @@
 | 2 נגדים | 1kΩ בלבד | [לרכישה](https://s.click.aliexpress.com/e/_c3BhyhVt) |
 | קופסה (לא חובה) | להדפסה בתלת-ממד | [קובץ ב-MakerWorld](https://makerworld.com/en/models/3523403-breakout-board-for-esp#profileId-4027704) |
 
+קישורי AliExpress הם קישורי שותפים.
+
 בנוסף צריך:
 
 * מולטימטר
@@ -73,16 +75,16 @@
 > **צבעי החוטים תקפים לכבל שלי בלבד.** בדוק את שלך: מחזיקים את התקע עם הקצה למעלה והמגעים המוזהבים מולך, ופין 1 משמאל. בכבל שלי **האדום הוא לא 5V**.
 
 > [!CAUTION]
-> * לפני חיבור ה-ESP32, חבר את התקע למונה בלי ה-ESP32 ומדוד DC בין `VIN` ל-`GND`. צריך לראות בערך **5V+**. אם מופיע **5V-**, הכיוון הפוך.
+> * לפני חיבור ה-ESP32, חבר את התקע למונה בלי ה-ESP32 ומדוד DC בין `VIN` ל-`GND`. צריך לראות בערך **5V+**. אם מופיע **5V-**, הכיוון הפוך, ואסור להכניס את ה-ESP32.
 > * אל תחבר USB ואת המונה בו-זמנית.
-> * הצד של ה-Request לעולם לא מתחבר לפין של ה-ESP32, כי 5V יגיעו אליו.
+> * חוט ה-Request מתחבר רק דרך הנגד אל קו ה-+5V. אל תחבר אותו לפין GPIO, כי פיני ה-GPIO של ה-ESP32 עובדים ב-3.3V.
 > * עובדים רק מול יציאת ה-P1. לא נוגעים בצד החשמלי של המונה.
 
 ## התקנה
 
 ### שלב 1: התקנת ESPHome
 
-1. ב-Home Assistant, עבור אל **Settings > Add-ons > Add-on Store**.
+1. ב-Home Assistant, עבור אל **Settings > Add-ons > Add-on Store**. בגרסאות חדשות התפריט עשוי להיקרא **Apps**.
 2. חפש **ESPHome Device Builder** ולחץ **Install**.
 3. לחץ **Start**, ואז **Open Web UI**.
 
@@ -111,7 +113,7 @@ ap_password: "סיסמה שתבחר"
 3. לחץ **Save**.
 
 > [!NOTE]
-> ה-ESP32 צריך קליטת Wi-Fi ליד המונה, ברשת שבה נמצא Home Assistant. רוב לוחות ה-ESP32 תומכים רק ב-2.4GHz.
+> ה-ESP32 צריך קליטת Wi-Fi ליד המונה, ברשת שבה נמצא Home Assistant. הוא תומך רק ברשת 2.4GHz.
 
 ### שלב 4: הקוד והצריבה, בלי המונה
 
@@ -143,7 +145,9 @@ ap_password: "סיסמה שתבחר"
 ### שלב 7: עלות וצפי
 
 1. התקן את ההרחבה **File editor** דרך **Add-ons**, ופתח איתה את `configuration.yaml`.
-2. הדבק בסוף הקובץ את התוכן של [`homeassistant/configuration.yaml`](homeassistant/configuration.yaml). אם כבר יש בקובץ `sensor:` או `template:`, מזג את הקטעים במקום לשכפל אותם.
+2. הדבק בסוף הקובץ את התוכן של [`homeassistant/configuration.yaml`](homeassistant/configuration.yaml).
+
+   **חשוב:** אם כבר יש בקובץ `utility_meter:`, `sensor:` או `template:`, אל תשכפל אותם. הוסף את השורות החדשות מתחת לקטע הקיים. כפילות עלולה לגרום ל-Home Assistant להתעלם מאחד הקטעים, גם כש-Check configuration עובר.
 3. עדכן את המחיר שלך לקוט"ש ב-`price_with_vat`, ואת ההנחה ב-`discount_percent`.
 4. שמור, לחץ **Developer tools > YAML > Check configuration**, ואז בצע **Restart** מלא.
 5. ב-**Developer tools > States**, חפש `electricity_price` וודא שמופיע מחיר.
@@ -153,18 +157,17 @@ ap_password: "סיסמה שתבחר"
 1. מ-HACS, התקן את `Mushroom`, `ApexCharts Card` ו-`card-mod`, ורענן את הדפדפן.
 2. בדשבורד, לחץ על העיפרון ואז **Add card > Manual**.
 3. מחק את מה שיש שם, הדבק את [`homeassistant/dashboard.yaml`](homeassistant/dashboard.yaml) ושמור.
-
 4. כוון את `max` בשעון העומס: `17` ל-3×25A, או `27` ל-3×40A.
 
 ## 📦 קופסה להדפסה בתלת-ממד
 
 <p align="center">
-  <a href="https://makerworld.com/en/models/3523372-esp-breakout-board-box#profileId-4027663">
+  <a href="https://makerworld.com/en/models/3523403-breakout-board-for-esp#profileId-4027704">
     <img src="images/enclosure.jpg" alt="קופסה מודפסת עם ה-ESP32 בתוכה" width="320">
   </a>
 </p>
 
-תכננתי קופסת קיר ללוח, עם מכסה נשלף וחריצי אוורור. קובץ ההדפסה זמין ב-[MakerWorld](https://makerworld.com/en/models/3523372-esp-breakout-board-box#profileId-4027663).
+תכננתי קופסת קיר ללוח, עם מכסה נשלף וחריצי אוורור. קובץ ההדפסה זמין ב-[MakerWorld](https://makerworld.com/en/models/3523403-breakout-board-for-esp#profileId-4027704).
 
 ## מה מקבלים
 
@@ -201,7 +204,7 @@ ap_password: "סיסמה שתבחר"
 |---|---|
 | המכשיר Offline אחרי עדכון | אם פרטי ה-Wi-Fi הוזנו רק דרך הדף `192.168.4.1`, הם עלולים להימחק בעדכון. שמור אותם ב-`secrets.yaml`. |
 | `bad CRC` חוזר | החיווט, הנגדים וה-`inverted: true`. |
-| כרטיסים מציגים 0 או `Entity not found` | שהמכשיר נוסף ל-Home Assistant, ושבוצע Restart מלא אחרי עריכת `configuration.yaml`. |
+| כרטיסים מציגים 0, `None` או `Entity not available` | שהמכשיר נוסף ל-Home Assistant, שהקטע נמצא ב-`configuration.yaml` בלי כפילויות, ושבוצע Restart מלא. |
 
 ## קרדיט ורישיון
 
