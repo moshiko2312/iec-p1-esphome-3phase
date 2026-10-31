@@ -80,22 +80,81 @@
 
 ## התקנה
 
-### 1. ESP32
+### שלב 1: התקנת ESPHome
 
-1. העתק את [`esphome/secrets.example.yaml`](esphome/secrets.example.yaml) ל-`secrets.yaml` ומלא את הפרטים שלך.
-2. העלה את [`esphome/electricity-meter.yaml`](esphome/electricity-meter.yaml) דרך USB, **כשהמונה מנותק**.
-3. נתק את ה-USB, חבר את המעגל למונה, ובדוק ב-Logs שמופיעות שורות `Sending state`.
-4. הוסף את המכשיר ב-**Settings > Devices & services**.
+1. ב-Home Assistant, עבור אל **Settings > Add-ons > Add-on Store**.
+2. חפש **ESPHome Device Builder** ולחץ **Install**.
+3. לחץ **Start**, ואז **Open Web UI**.
 
-### 2. Home Assistant
+### שלב 2: יצירת המכשיר
 
-1. הוסף את [`homeassistant/configuration.yaml`](homeassistant/configuration.yaml) לקובץ `configuration.yaml` שלך. אם כבר יש בקובץ `sensor:` או `template:`, מזג את הקטעים במקום לשכפל אותם.
-2. לחץ **Check configuration**, ואז בצע **Restart** מלא.
+1. לחץ **New Device > Continue**.
+2. תן למכשיר את השם `electricity-meter`, ובחר **ESP32**.
+3. בסוף האשף מוצג **Encryption key**. העתק אותו ושמור אותו לשלב הבא.
+4. לחץ **Skip**. אל תתקין עדיין.
+
+### שלב 3: שמירת הסיסמאות
+
+הקובץ `secrets.yaml` שומר את הסיסמאות בנפרד מהקוד, כדי שלא יתפרסמו בטעות.
+
+1. ב-ESPHome, לחץ למעלה מימין על **Secrets**.
+2. הדבק את השורות הבאות והחלף את הערכים בשלך:
+
+```yaml
+wifi_ssid: "שם רשת ה-WiFi שלך"
+wifi_password: "סיסמת ה-WiFi שלך"
+api_key: "ה-Encryption key מהשלב הקודם"
+ota_password: "סיסמה שתבחר"
+ap_password: "סיסמה שתבחר"
+```
+
+3. לחץ **Save**.
+
+> [!NOTE]
+> ה-ESP32 צריך קליטת Wi-Fi ליד המונה, ברשת שבה נמצא Home Assistant. רוב לוחות ה-ESP32 תומכים רק ב-2.4GHz.
+
+### שלב 4: הקוד והצריבה, בלי המונה
+
+1. במכשיר `electricity-meter` לחץ **Edit**.
+2. מחק את כל מה שיש שם, והדבק את התוכן של [`esphome/electricity-meter.yaml`](esphome/electricity-meter.yaml).
+3. לחץ **Save**.
+4. חבר את ה-ESP32 למחשב ב-USB. **המונה חייב להיות מנותק.**
+5. לחץ **Install > Plug into this computer** ובחר את היציאה של הלוח. ההתקנה הראשונה עשויה לקחת כמה דקות.
+6. כשמופיע `Configuration installed!`, נתק את ה-USB.
+
+אם האפשרות לא עובדת בדפדפן שלך, בחר **Manual download** וצרוב את הקובץ דרך [web.esphome.io](https://web.esphome.io) ב-Chrome או ב-Edge.
+
+### שלב 5: חיבור למונה
+
+1. הוצא את ה-ESP32 מהלוח, חבר את התקע למונה, ומדוד DC בין `VIN` ל-`GND`. צריך לראות בערך **5V+**.
+2. אם המתח תקין, נתק את התקע, החזר את ה-ESP32 ללוח, וחבר את התקע חזרה למונה.
+3. חכה דקה. ב-ESPHome המכשיר צריך להופיע כ-**Online**.
+4. לחץ **Logs** וודא שמופיעות שורות `Sending state`.
+
+### שלב 6: חיבור ל-Home Assistant
+
+1. עבור אל **Settings > Devices & services**.
+2. ליד `electricity-meter` או `ESPHome`, לחץ **Configure**.
+3. אם תתבקש להזין מפתח, הדבק את ה-Encryption key.
+4. פתח את המכשיר, וודא שמופיעות 20 ישויות, כמו `Power` ו-`Energy Total`.
+
+המכשיר מופיע רק אם Home Assistant מצא אותו. אם הוא לא מופיע, לחץ **Add Integration**, בחר **ESPHome**, והזן את כתובת ה-IP שמופיעה ב-Logs.
+
+### שלב 7: עלות וצפי
+
+1. התקן את ההרחבה **File editor** דרך **Add-ons**, ופתח איתה את `configuration.yaml`.
+2. הדבק בסוף הקובץ את התוכן של [`homeassistant/configuration.yaml`](homeassistant/configuration.yaml). אם כבר יש בקובץ `sensor:` או `template:`, מזג את הקטעים במקום לשכפל אותם.
 3. עדכן את המחיר שלך לקוט"ש ב-`price_with_vat`, ואת ההנחה ב-`discount_percent`.
+4. שמור, לחץ **Developer tools > YAML > Check configuration**, ואז בצע **Restart** מלא.
+5. ב-**Developer tools > States**, חפש `electricity_price` וודא שמופיע מחיר.
 
-### 3. דשבורד
+### שלב 8: דשבורד
 
-הדבק את [`homeassistant/dashboard.yaml`](homeassistant/dashboard.yaml) בכרטיס **Manual**. כוון את `max` בשעון העומס: `17` ל-3×25A, או `27` ל-3×40A.
+1. מ-HACS, התקן את `Mushroom`, `ApexCharts Card` ו-`card-mod`, ורענן את הדפדפן.
+2. בדשבורד, לחץ על העיפרון ואז **Add card > Manual**.
+3. מחק את מה שיש שם, הדבק את [`homeassistant/dashboard.yaml`](homeassistant/dashboard.yaml) ושמור.
+
+4. כוון את `max` בשעון העומס: `17` ל-3×25A, או `27` ל-3×40A.
 
 ## 📦 קופסה להדפסה בתלת-ממד
 
