@@ -1,0 +1,249 @@
+# Requires from HACS: Mushroom, ApexCharts Card, card-mod (for right-to-left layout).
+# Paste into a Manual card. Set max: 17 for 3x25A, or 27 for 3x40A.
+type: custom:mod-card
+card_mod:
+  style: |
+    ha-card {
+      direction: rtl;
+      text-align: right;
+      background: none;
+      border: none;
+      box-shadow: none;
+    }
+card:
+  type: vertical-stack
+  cards:
+  - type: custom:mushroom-title-card
+    title: ⚡ חשמל בבית
+    subtitle: >
+      {{ states('sensor.electricity_meter_power') | float(0) | round(2) }} kW עכשיו ·
+      ₪{{ states('sensor.electricity_cost_now') | float(0) | round(2) }} לשעה
+
+  - type: custom:mushroom-template-card
+    entity: sensor.electricity_meter_power
+    icon: mdi:home-lightning-bolt
+    icon_color: >
+      {% set power = states('sensor.electricity_meter_power') | float(0) %}
+      {{ 'green' if power < 1 else 'amber' if power < 3 else 'orange' if power < 6 else 'red' }}
+    primary: >
+      {% set power = states('sensor.electricity_meter_power') | float(0) %}
+      {% if power < 1 %}🟢 הבית רגוע
+      {% elif power < 3 %}🟡 צריכה בינונית
+      {% elif power < 6 %}🟠 צריכה גבוהה
+      {% else %}🔴 צריכה גבוהה מאוד{% endif %}
+    secondary: >
+      {% set hours = now().hour + now().minute / 60 %}
+      {% set today = states('sensor.electricity_cost_today') | float(0) %}
+      {{ 'בקצב הזה היום יעלה ₪' ~ ((today / hours * 24) | round(0)) if hours >= 2 else 'התחזית להיום תופיע בהמשך היום' }}
+
+  - type: custom:mushroom-template-card
+    entity: sensor.electricity_compared_to_yesterday
+    icon: mdi:compare-horizontal
+    icon_color: >
+      {% set change = states('sensor.electricity_compared_to_yesterday') %}
+      {% if not is_number(change) %}grey
+      {% elif change | float > 5 %}red
+      {% elif change | float < -5 %}green
+      {% else %}blue{% endif %}
+    primary: >
+      {% set change = states('sensor.electricity_compared_to_yesterday') %}
+      {% if not is_number(change) %}ההשוואה לאתמול עוד לא מוכנה
+      {% elif change | float > 5 %}🔴 {{ change | float | round(0) }}% יותר מאתמול באותה שעה
+      {% elif change | float < -5 %}🟢 {{ (change | float | abs) | round(0) }}% פחות מאתמול באותה שעה
+      {% else %}🔵 בערך כמו אתמול באותה שעה{% endif %}
+    secondary: >
+      {% set yesterday = states('sensor.electricity_yesterday_so_far') %}
+      {% if is_number(yesterday) %}היום {{ states('sensor.electricity_daily') | float(0) | round(1) }} kWh · אתמול עד עכשיו {{ yesterday | float | round(1) }} kWh
+      {% else %}צריך יממה מלאה של נתונים{% endif %}
+
+  - type: custom:mushroom-template-card
+    entity: sensor.electricity_peak_today
+    icon: mdi:chart-bell-curve
+    icon_color: deep-orange
+    primary: >
+      שיא היום: {{ states('sensor.electricity_peak_today') | float(0) | round(2) }} kW
+      בשעה {{ state_attr('sensor.electricity_peak_today', 'peak_time') }}
+    secondary: >
+      באותו רגע זה עלה ₪{{ (states('sensor.electricity_peak_today') | float(0)
+      * states('sensor.electricity_price') | float(0)) | round(2) }} לשעה
+
+  - type: custom:mushroom-template-card
+    entity: sensor.electricity_baseload_cost
+    icon: mdi:weather-night
+    icon_color: >
+      {{ 'red' if states('sensor.electricity_baseload') | float(0) > 0.5 else 'green' }}
+    primary: ₪{{ states('sensor.electricity_baseload_cost') | float(0) | round(0) }} לחודש כשכמעט הכול כבוי
+    secondary: >
+      {{ 'גבוה, כדאי לבדוק מה דולק כל הזמן' if states('sensor.electricity_baseload') | float(0) > 0.5 else 'תקין' }}
+
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:mushroom-template-card
+        entity: sensor.electricity_cost_today
+        icon: mdi:calendar-today
+        icon_color: teal
+        primary: ₪{{ states('sensor.electricity_cost_today') | float(0) | round(1) }}
+        secondary: היום · {{ states('sensor.electricity_daily') | float(0) | round(1) }} kWh
+      - type: custom:mushroom-template-card
+        entity: sensor.electricity_cost_month
+        icon: mdi:calendar-month
+        icon_color: blue
+        primary: ₪{{ states('sensor.electricity_cost_month') | float(0) | round(0) }}
+        secondary: החודש · {{ states('sensor.electricity_monthly') | float(0) | round(0) }} kWh
+      - type: custom:mushroom-template-card
+        entity: sensor.electricity_forecast_month
+        icon: mdi:crystal-ball
+        icon_color: purple
+        primary: >
+          {% set forecast = states('sensor.electricity_forecast_month') %}
+          {{ '₪' ~ (forecast | float | round(0)) if is_number(forecast) else 'מחר' }}
+        secondary: צפי לסוף החודש
+      - type: custom:mushroom-template-card
+        entity: sensor.electricity_meter_power
+        icon: mdi:lightning-bolt
+        icon_color: >
+          {% set power = states('sensor.electricity_meter_power') | float(0) %}
+          {{ 'red' if power >= 10 else 'amber' if power >= 5 else 'green' }}
+        primary: ₪{{ states('sensor.electricity_cost_now') | float(0) | round(2) }} לשעה
+        secondary: עלות עכשיו
+
+  - type: custom:apexcharts-card
+    chart_type: radialBar
+    header:
+      show: true
+      title: עומס על הבית
+      show_states: false
+    series:
+      - entity: sensor.electricity_meter_power
+        name: kW
+        min: 0
+        max: 17
+        color: "#00e5a0"
+    apex_config:
+      chart:
+        height: 220
+      legend:
+        show: false
+      fill:
+        type: gradient
+        gradient:
+          shade: dark
+          gradientToColors:
+            - "#ff3d71"
+          stops:
+            - 0
+            - 100
+      plotOptions:
+        radialBar:
+          hollow:
+            size: 62%
+          track:
+            opacity: 0.15
+
+  - type: custom:apexcharts-card
+    chart_type: donut
+    header:
+      show: true
+      title: חלוקה בין הפאזות
+      show_states: false
+    series:
+      - entity: sensor.electricity_meter_power_l1
+        name: פאזה 1
+        color: "#00d4ff"
+      - entity: sensor.electricity_meter_power_l2
+        name: פאזה 2
+        color: "#a56bff"
+      - entity: sensor.electricity_meter_power_l3
+        name: פאזה 3
+        color: "#ffb300"
+    apex_config:
+      chart:
+        height: 190
+      legend:
+        show: false
+      stroke:
+        width: 0
+
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+      - type: custom:mushroom-template-card
+        entity: sensor.electricity_meter_power_l1
+        icon: mdi:numeric-1-circle
+        icon_color: cyan
+        layout: vertical
+        primary: "{{ states('sensor.electricity_meter_power_l1') | float(0) | round(2) }} kW"
+        secondary: >
+          {{ states('sensor.electricity_meter_voltage_l1') | float(0) | round(0) }}V ·
+          {{ states('sensor.electricity_meter_current_l1') | float(0) | round(1) }}A
+      - type: custom:mushroom-template-card
+        entity: sensor.electricity_meter_power_l2
+        icon: mdi:numeric-2-circle
+        icon_color: deep-purple
+        layout: vertical
+        primary: "{{ states('sensor.electricity_meter_power_l2') | float(0) | round(2) }} kW"
+        secondary: >
+          {{ states('sensor.electricity_meter_voltage_l2') | float(0) | round(0) }}V ·
+          {{ states('sensor.electricity_meter_current_l2') | float(0) | round(1) }}A
+      - type: custom:mushroom-template-card
+        entity: sensor.electricity_meter_power_l3
+        icon: mdi:numeric-3-circle
+        icon_color: amber
+        layout: vertical
+        primary: "{{ states('sensor.electricity_meter_power_l3') | float(0) | round(2) }} kW"
+        secondary: >
+          {{ states('sensor.electricity_meter_voltage_l3') | float(0) | round(0) }}V ·
+          {{ states('sensor.electricity_meter_current_l3') | float(0) | round(1) }}A
+
+  - type: custom:apexcharts-card
+    graph_span: 24h
+    header:
+      show: true
+      title: צריכה ב-24 שעות
+      show_states: false
+    series:
+      - entity: sensor.electricity_meter_power
+        name: kW
+        type: area
+        color: "#00e5a0"
+        curve: smooth
+        stroke_width: 2
+        opacity: 0.25
+        group_by:
+          func: avg
+          duration: 10min
+    apex_config:
+      chart:
+        height: 220
+      grid:
+        borderColor: "#ffffff14"
+      dataLabels:
+        enabled: false
+
+  - type: custom:apexcharts-card
+    graph_span: 14d
+    span:
+      end: day
+    header:
+      show: true
+      title: צריכה יומית (kWh)
+      show_states: false
+    series:
+      - entity: sensor.electricity_meter_energy_total
+        name: kWh
+        type: column
+        color: "#00d4ff"
+        statistics:
+          type: change
+          period: day
+    apex_config:
+      chart:
+        height: 220
+      grid:
+        borderColor: "#ffffff14"
+      plotOptions:
+        bar:
+          borderRadius: 5

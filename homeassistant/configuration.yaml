@@ -1,0 +1,136 @@
+utility_meter:
+  electricity_daily:
+    name: Electricity Daily
+    source: sensor.electricity_meter_energy_total
+    cycle: daily
+  electricity_monthly:
+    name: Electricity Monthly
+    source: sensor.electricity_meter_energy_total
+    cycle: monthly
+
+sensor:
+  # Lowest power in the last 24 hours: what the house uses when almost everything is off
+  - platform: statistics
+    name: Electricity Baseload
+    unique_id: electricity_baseload
+    entity_id: sensor.electricity_meter_power
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+    sampling_size: 20000
+
+  # Energy used in the last 24 hours, needed for the same-time comparison with yesterday
+  - platform: statistics
+    name: Electricity Last 24 Hours
+    unique_id: electricity_last_24_hours
+    entity_id: sensor.electricity_meter_energy_total
+    state_characteristic: change
+    max_age:
+      hours: 24
+    sampling_size: 2000
+
+template:
+  # Highest power today and when it happened; resets at midnight
+  - trigger:
+      - platform: time
+        at: "00:00:00"
+        id: reset
+      - platform: state
+        entity_id: sensor.electricity_meter_power
+    sensor:
+      - name: Electricity Peak Today
+        unique_id: electricity_peak_today
+        unit_of_measurement: kW
+        device_class: power
+        icon: mdi:chart-bell-curve
+        state: >
+          {% set peak = this.state | float(0) %}
+          {% set power = states('sensor.electricity_meter_power') | float(0) %}
+          {{ power if trigger.id == 'reset' or power > peak else peak }}
+        attributes:
+          peak_time: >
+            {% set peak = this.state | float(0) %}
+            {% set power = states('sensor.electricity_meter_power') | float(0) %}
+            {{ now().strftime('%H:%M') if trigger.id == 'reset' or power > peak
+               else this.attributes.get('peak_time', '') }}
+
+  - sensor:
+      # today + all of yesterday - last 24 hours = yesterday's use up to this time of day
+      - name: Electricity Yesterday So Far
+        unique_id: electricity_yesterday_so_far
+        unit_of_measurement: kWh
+        device_class: energy
+        availability: >
+          {{ (states('sensor.electricity_daily') | float(0)
+              + state_attr('sensor.electricity_daily', 'last_period') | float(0)
+              - states('sensor.electricity_last_24_hours') | float(0)) >= 0.5 }}
+        state: >
+          {{ (states('sensor.electricity_daily') | float(0)
+              + state_attr('sensor.electricity_daily', 'last_period') | float(0)
+              - states('sensor.electricity_last_24_hours') | float(0)) | round(2) }}
+
+      - name: Electricity Compared To Yesterday
+        unique_id: electricity_compared_to_yesterday
+        unit_of_measurement: "%"
+        icon: mdi:compare-horizontal
+        availability: "{{ is_number(states('sensor.electricity_yesterday_so_far')) }}"
+        state: >
+          {% set yesterday = states('sensor.electricity_yesterday_so_far') | float(0) %}
+          {{ ((states('sensor.electricity_daily') | float(0) - yesterday) / yesterday * 100) | round(0) }}
+
+      - name: Electricity Baseload Cost
+        unique_id: electricity_baseload_cost
+        unit_of_measurement: ILS
+        device_class: monetary
+        # Cost of a 30-day month at the baseload power
+        state: >
+          {{ (states('sensor.electricity_baseload') | float(0) * 720
+              * states('sensor.electricity_price') | float(0)) | round(0) }}
+
+      - name: Electricity Price
+        unique_id: electricity_price
+        unit_of_measurement: ILS/kWh
+        icon: mdi:cash
+        # Price with VAT, and discount percent (0 until the Cellcom discount is known)
+        state: >
+          {% set price_with_vat = 0.6352 %}
+          {% set discount_percent = 0 %}
+          {{ (price_with_vat * (1 - discount_percent / 100)) | round(4) }}
+
+      - name: Electricity Cost Now
+        unique_id: electricity_cost_now
+        unit_of_measurement: ILS/h
+        icon: mdi:cash-fast
+        state: >
+          {{ (states('sensor.electricity_meter_power') | float(0)
+              * states('sensor.electricity_price') | float(0)) | round(2) }}
+
+      - name: Electricity Cost Today
+        unique_id: electricity_cost_today
+        unit_of_measurement: ILS
+        device_class: monetary
+        state: >
+          {{ (states('sensor.electricity_daily') | float(0)
+              * states('sensor.electricity_price') | float(0)) | round(2) }}
+
+      - name: Electricity Cost Month
+        unique_id: electricity_cost_month
+        unit_of_measurement: ILS
+        device_class: monetary
+        state: >
+          {{ (states('sensor.electricity_monthly') | float(0)
+              * states('sensor.electricity_price') | float(0)) | round(2) }}
+
+      - name: Electricity Forecast Month
+        unique_id: electricity_forecast_month
+        unit_of_measurement: ILS
+        device_class: monetary
+        # Starts on day 2 of the month, when there is enough data for an average
+        availability: "{{ now().day > 1 }}"
+        state: >
+          {% set fixed_charge = 0 %}
+          {% set t = now() %}
+          {% set days_in_month = ((t.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)).day %}
+          {% set elapsed = t.day - 1 + (t.hour + t.minute / 60) / 24 %}
+          {% set used = states('sensor.electricity_monthly') | float(0) %}
+          {{ (used / elapsed * days_in_month * states('sensor.electricity_price') | float(0) + fixed_charge) | round(2) }}
