@@ -11,7 +11,7 @@ esp32:
 
 wifi:
   # No network is compiled in. On first boot, and whenever the saved network
-  # can't be reached for a minute, the device opens a hotspot named after itself
+  # can't be reached for 90 seconds, the device opens a hotspot named after itself
   # (electricity-meter) with a setup page for choosing a Wi-Fi network.
   # Networks saved this way are kept across firmware updates.
   ap: {}

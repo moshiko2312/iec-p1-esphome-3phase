@@ -1,15 +1,26 @@
 # ⚡ קורא P1 למונה חכם תלת-פאזי של חברת החשמל
 
-קריאת נתונים ממונה Kaifa תלת-פאזי ישראלי דרך יציאת ה-P1, עם ESP32 ו-ESPHome, והצגה ב-Home Assistant: צריכה לפי פאזה, עלות בשקלים, צפי חודשי, השוואה לאתמול ושיא יומי.
+קורא את מונה ה-Kaifa התלת-פאזי של חברת החשמל דרך יציאת ה-P1, ומחשב **על המכשיר עצמו** הספק, עלות בשקלים לפי מסלול הספק שלך, צפי חודשי, השוואה לאתמול ושיא יומי. הכול מוצג בממשק אינטרנטי זהוב שהמכשיר מגיש, ונכנס ל-Home Assistant אוטומטית, בלי שורת YAML אחת.
 
-*Read an Israeli IEC Kaifa three-phase smart meter through its P1 port with an ESP32 and ESPHome, and show live power, cost and forecasts in Home Assistant.*
+*Reads an Israeli IEC Kaifa three-phase smart meter through its P1 port with an ESP32. Prebuilt firmware, on-device cost engine with Israeli supplier plans, built-in web UI, automatic Home Assistant discovery, three OTA paths, Wi-Fi or PoE.*
 
-מבוסס על הפרויקט המצוין [klimofey/iec-p1-esphome](https://github.com/klimofey/iec-p1-esphome) של Timofey Klimov.
+מבוסס על הפרויקט המצוין [klimofey/iec-p1-esphome](https://github.com/klimofey/iec-p1-esphome) של Timofey Klimov, ועל [mp3llll/iec-p1-esphome-3phase](https://github.com/mp3llll/iec-p1-esphome-3phase) של Yanir, שהוסיף את התמיכה בתלת-פאזי.
 
 <p align="center">
   <img src="images/installed.jpg" alt="הקורא מותקן מעל מונה Kaifa MA309M" width="640">
 </p>
-<p align="center"><b>מותקן על מונה Kaifa MA309M, בתוך קופסה מודפסת בתלת-ממד</b></p>
+
+## מה חדש בגרסה 2
+
+| | גרסה 1 | גרסה 2 |
+|---|---|---|
+| **התקנה** | יצירת מכשיר ב-ESPHome, הדבקת YAML, קומפילציה | צריבת קושחה מוכנה מהדפדפן, בלי ESPHome |
+| **Wi-Fi** | `secrets.yaml` | מסך חיבור מיד אחרי הצריבה, או עמוד הגדרה מהנקודה החמה של המכשיר |
+| **חישוב עלות** | YAML ב-Home Assistant | על המכשיר, לפי מסלול ספק (יום / ערב / לילה) |
+| **הגדרות** | עריכת קוד | ממשק זהוב במכשיר, וגם ישויות ב-Home Assistant |
+| **עדכונים** | קומפילציה מחדש | עדכון מ-Home Assistant, העלאת קובץ בדפדפן, או OTA רגיל |
+| **לוחות** | ESP32 DevKit | ESP32 DevKit (Wi-Fi) או EST-PoE-32 (רשת קווית + PoE) |
+| **קריאת הנתונים** | CRC על הזרם | CRC על הטלגרם השלם, פענוח רק אחריו, וערכים "לא ידוע" כשהמונה שותק |
 
 ## הפרויקט בתמונות
 
@@ -21,49 +32,28 @@
   </tr>
 </table>
 
-<p align="center">
-  <img src="images/dashboard.png" alt="דשבורד Home Assistant עם צריכה לפי פאזה וגרף" width="420">
-</p>
-<p align="center"><b>נתונים חיים ב-Home Assistant: חלוקה בין הפאזות, הספק, מתח, זרם וגרף צריכה</b></p>
-
-## במה זה שונה מהפרויקט המקורי
-
-| | הפרויקט המקורי | הפרויקט הזה |
-|---|---|---|
-| **מונה** | Kaifa MA110M, חד-פאזי | Kaifa MA309M, תלת-פאזי |
-| **לוח** | Wemos D1 mini | ESP32 בעל 30 פינים על לוח מהדקים |
-| **פריימוורק** | Arduino | ESP-IDF |
-| **קריאת הנתונים** | רכיב `dsmr` | קוד ייעודי עם בדיקת CRC |
-| **פאזות** | L1 | L1, L2, L3 |
-| **Home Assistant** | סנסורים | סנסורים, עלות, צפי ודשבורד מוכן |
-
-**למה לא `dsmr`?** ב-ESPHome 2025.11 הרכיב דורש Arduino, ואין בו מוני אנרגיה ישראליים `1.8.11`–`1.8.13` או `energy_delivered_tariff3`. לכן הקוד כאן קורא את הנתונים ישירות, ומפרסם דיווח רק אם ה-CRC שלו תקין.
-
 ## מה נדרש
 
 | רכיב | פרטים | קישור |
 |---|---|---|
-| ESP32 + לוח מהדקים | ESP32 בעל 30 פינים (נבדק עם ESP32-32D) | [לרכישה](https://s.click.aliexpress.com/e/_c3dcaJht) |
-| כבל RJ12 | 6 גידים (6P6C), צריך כבל עם כל ששת המגעים. כבל רשת רגיל (RJ45) לא מתאים | [לרכישה](https://s.click.aliexpress.com/e/_c38fIZmx) |
-| 2 נגדים | 1kΩ בלבד | [לרכישה](https://s.click.aliexpress.com/e/_c3BhyhVt) |
-| קופסה (לא חובה) | להדפסה בתלת-ממד | [קובץ ב-MakerWorld](https://makerworld.com/en/models/3523403-breakout-board-for-esp#profileId-4027704) |
+| **לוח, אפשרות א'** | ESP32 בעל 30 פינים על לוח מהדקים (נבדק עם ESP32-32D). מקבל מתח מהמונה, מתחבר ב-Wi-Fi | [לרכישה](https://s.click.aliexpress.com/e/_c3dcaJht) |
+| **לוח, אפשרות ב'** | [EST-PoE-32](https://shop.everythingsmart.io/products/est-poe-32-esp32-poe-development-board) של Everything Smart Technology. רשת קווית, מתח מ-PoE / USB-C / 9–28V | [לרכישה](https://shop.everythingsmart.io/products/est-poe-32-esp32-poe-development-board) |
+| כבל RJ12 | 6 גידים (6P6C), עם כל ששת המגעים. כבל רשת רגיל (RJ45) לא מתאים | [לרכישה](https://s.click.aliexpress.com/e/_c38fIZmx) |
+| 2 נגדים | 1kΩ | [לרכישה](https://s.click.aliexpress.com/e/_c3BhyhVt) |
+| קופסה (לא חובה) | להדפסה בתלת-ממד, ללוח ה-DevKit | [MakerWorld](https://makerworld.com/en/models/3523403-breakout-board-for-esp#profileId-4027704) |
 
-קישורי AliExpress הם קישורי שותפים.
-
-בנוסף צריך:
-
-* מולטימטר
-* Home Assistant עם ESPHome
-* מ-HACS: `Mushroom`, `ApexCharts Card` ו-`card-mod`
+קישורי AliExpress הם קישורי שותפים. בנוסף צריך מולטימטר, ומחשב עם Chrome או Edge לצריבה.
 
 ## חיווט
+
+### אפשרות א': ESP32 DevKit (Wi-Fi)
 
 ![תרשים חיווט](images/wiring.png)
 
 | פין ב-RJ12 | תפקיד | מתחבר אל | צבע בכבל שלי |
 |---|---|---|---|
-| 1 | +5V | `VIN` | לבן |
-| 2 | Request | דרך נגד 1kΩ אל +5V | שחור |
+| 1 | +5V מהמונה | `VIN` | לבן |
+| 2 | Request | דרך נגד 1kΩ אל +5V (`VIN`) | שחור |
 | 3 | Data GND | `GND` | אדום |
 | 4 | לא בשימוש | לבודד, לא לחבר | ירוק |
 | 5 | Data | `GPIO16` (RX2) | צהוב |
@@ -71,112 +61,134 @@
 
 בנוסף, מחברים נגד 1kΩ בין `3V3` ל-`GPIO16`.
 
+### אפשרות ב': EST-PoE-32 (רשת קווית)
+
+הלוח מקבל מתח מה-PoE (או מ-USB-C / 9–28V), **ולא מהמונה**.
+
+| פין ב-RJ12 | תפקיד | מתחבר אל |
+|---|---|---|
+| 1 | +5V מהמונה | **לא ללוח.** רק לרגל אחת של נגד 1kΩ, שהרגל השנייה שלו מחוברת לפין 2 |
+| 2 | Request | דרך הנגד אל פין 1 |
+| 3 | Data GND | `GND` |
+| 4 | לא בשימוש | לבודד, לא לחבר |
+| 5 | Data | `36` |
+| 6 | Power GND | `GND` |
+
+בנוסף, מחברים נגד 1kΩ בין `3V3` ל-`36`. שניהם נמצאים באותו מחבר בצד הלוח. `GPIO36` הוא פין קלט בלבד, ולא משמש את רכיב הרשת (LAN8720). הגדרות הרשת לקוחות מ[הקונפיגורציה הרשמית של היצרן](https://github.com/EverythingSmartHome/firmware/tree/main/EST-PoE-32/ESPHome): `MDC=23`, `MDIO=18`, שעון `17` (יציאה), `power=12`.
+
 > [!WARNING]
 > **צבעי החוטים תקפים לכבל שלי בלבד.** בדוק את שלך: מחזיקים את התקע עם הקצה למעלה והמגעים המוזהבים מולך, ופין 1 משמאל. בכבל שלי **האדום הוא לא 5V**.
 
 > [!CAUTION]
-> * לפני חיבור ה-ESP32, חבר את התקע למונה בלי ה-ESP32 ומדוד DC בין `VIN` ל-`GND`. צריך לראות בערך **5V+**. אם מופיע **5V-**, הכיוון הפוך, ואסור להכניס את ה-ESP32.
-> * אל תחבר USB ואת המונה בו-זמנית.
-> * חוט ה-Request מתחבר רק דרך הנגד אל קו ה-+5V. אל תחבר אותו לפין GPIO, כי פיני ה-GPIO של ה-ESP32 עובדים ב-3.3V.
+> * לפני חיבור הלוח, חבר את התקע למונה בלי הלוח ומדוד DC בין פין 1 לפין 6. צריך לראות בערך **5V+**. אם מופיע **5V-**, הכיוון הפוך.
+> * בלוח ה-DevKit: אל תחבר USB ואת המונה בו-זמנית. בלוח ה-PoE: לעולם אל תחבר את פין 1 של המונה ללוח.
+> * חוט ה-Request מתחבר רק דרך הנגד אל ה-+5V. אל תחבר אותו לפין GPIO.
+> * ה-PoE בלוח EST-PoE-32 אינו מבודד גלוונית (לפי היצרן). יציאת ה-P1 של המונה מבודדת מהרשת החשמלית, אבל האדמה של הלוח מתחברת לאדמה של מתג הרשת.
 > * עובדים רק מול יציאת ה-P1. לא נוגעים בצד החשמלי של המונה.
 
 ## התקנה
 
-### שלב 1: התקנת ESPHome
+אין צורך ב-ESPHome או בתוספים ל-Home Assistant. זה עובד גם עם Home Assistant Container.
 
-1. ב-Home Assistant, עבור אל **Settings > Add-ons > Add-on Store**. בגרסאות חדשות התפריט עשוי להיקרא **Apps**.
-2. חפש **ESPHome Device Builder** ולחץ **Install**.
-3. לחץ **Start**, ואז **Open Web UI**.
-
-### שלב 2: יצירת המכשיר
-
-1. לחץ **New Device > Continue**.
-2. תן למכשיר את השם `electricity-meter`, ובחר **ESP32**.
-3. בסוף האשף מוצג **Encryption key**. העתק אותו ושמור אותו לשלב הבא.
-4. לחץ **Skip**. אל תתקין עדיין.
-
-### שלב 3: שמירת הסיסמאות
-
-הקובץ `secrets.yaml` שומר את הסיסמאות בנפרד מהקוד, כדי שלא יתפרסמו בטעות.
-
-1. ב-ESPHome, לחץ למעלה מימין על **Secrets**.
-2. הדבק את השורות הבאות והחלף את הערכים בשלך:
-
-```yaml
-wifi_ssid: "שם רשת ה-WiFi שלך"
-wifi_password: "סיסמת ה-WiFi שלך"
-api_key: "ה-Encryption key מהשלב הקודם"
-ota_password: "סיסמה שתבחר"
-ap_password: "סיסמה שתבחר"
-```
-
-3. לחץ **Save**.
+### שלב 1: צריבה מהדפדפן
 
 > [!NOTE]
-> ה-ESP32 צריך קליטת Wi-Fi ליד המונה, ברשת שבה נמצא Home Assistant. הוא תומך רק ברשת 2.4GHz.
+> דף ההתקנה ועדכוני הקושחה מ-Home Assistant מתארחים ב-GitHub Pages. בריפו פרטי, Pages עובד רק בתוכנית GitHub בתשלום, לכן כל עוד הריפו פרטי בתוכנית החינמית, דף ההתקנה וישות העדכון לא ייפתחו. קובצי ה-`.bin` מה-Releases עובדים בכל מקרה: צריבה דרך web.esphome.io, ועדכון דרך העלאת קובץ בממשק הזהוב. גם **Take control** ב-ESPHome Device Builder דורש ריפו ציבורי.
 
-### שלב 4: הקוד והצריבה, בלי המונה
+**המונה חייב להיות מנותק בזמן הצריבה.**
 
-1. במכשיר `electricity-meter` לחץ **Edit**.
-2. מחק את כל מה שיש שם, והדבק את התוכן של [`esphome/electricity-meter.yaml`](esphome/electricity-meter.yaml).
-3. לחץ **Save**.
-4. חבר את ה-ESP32 למחשב ב-USB. **המונה חייב להיות מנותק.**
-5. לחץ **Install > Plug into this computer** ובחר את היציאה של הלוח. ההתקנה הראשונה עשויה לקחת כמה דקות.
-6. כשמופיע `Configuration installed!`, נתק את ה-USB.
+1. פתח ב-Chrome או ב-Edge את [דף ההתקנה](https://moshiko2312.github.io/iec-p1-esphome-3phase/).
+2. בחר את הלוח שלך: ESP32 DevKit או EST-PoE-32.
+3. חבר את הלוח למחשב ב-USB, לחץ **Install** ובחר את היציאה.
 
-אם האפשרות לא עובדת בדפדפן שלך, בחר **Manual download** וצרוב את הקובץ דרך [web.esphome.io](https://web.esphome.io) ב-Chrome או ב-Edge.
+דרך חלופית: הורד את `electricity-meter-esp32.factory.bin` (או `-poe`) מ-[Releases](https://github.com/moshiko2312/iec-p1-esphome-3phase/releases), פתח את [web.esphome.io](https://web.esphome.io), לחץ **Connect**, ואז **Install** ובחר את הקובץ.
 
-### שלב 5: חיבור למונה
+### שלב 2: חיבור לרשת
 
-1. הוצא את ה-ESP32 מהלוח, חבר את התקע למונה, ומדוד DC בין `VIN` ל-`GND`. צריך לראות בערך **5V+**.
-2. אם המתח תקין, נתק את התקע, החזר את ה-ESP32 ללוח, וחבר את התקע חזרה למונה.
-3. חכה דקה. ב-ESPHome המכשיר צריך להופיע כ-**Online**.
-4. לחץ **Logs** וודא שמופיעות שורות `Sending state`.
+**לוח DevKit (Wi-Fi), שתי דרכים:**
 
-### שלב 6: חיבור ל-Home Assistant
+* **מיד אחרי הצריבה:** דף ההתקנה (וגם web.esphome.io) מציג מסך **Connect to Wi-Fi**. בוחרים רשת ומזינים סיסמה.
+* **מהטלפון, בכל זמן:** כשאין למכשיר רשת שמורה, או כשהיא לא זמינה במשך דקה וחצי, הוא פותח נקודה חמה בשם `electricity-meter`. מתחברים אליה, ועמוד ההגדרה הזהוב נפתח לבד. אם הוא לא נפתח, גולשים ל-`192.168.4.1`.
 
-1. עבור אל **Settings > Devices & services**.
-2. ליד `electricity-meter` או `ESPHome`, לחץ **Configure**.
-3. אם תתבקש להזין מפתח, הדבק את ה-Encryption key.
-4. פתח את המכשיר, וודא שמופיעות 20 ישויות, כמו `Power` ו-`Energy Total`.
+הרשת נשמרת במכשיר ונשארת גם אחרי עדכוני קושחה. ה-ESP32 תומך רק ברשת 2.4GHz.
 
-המכשיר מופיע רק אם Home Assistant מצא אותו. אם הוא לא מופיע, לחץ **Add Integration**, בחר **ESPHome**, והזן את כתובת ה-IP שמופיעה ב-Logs.
+**לוח PoE:** מחברים כבל רשת. הלוח מקבל כתובת ב-DHCP.
 
-### שלב 7: עלות וצפי
+אחרי החיבור לרשת מנתקים את ה-USB, מחברים את התקע למונה (בלוח ה-DevKit, אחרי בדיקת המתח), ותוך דקה הנורית P1 בממשק נדלקת.
 
-1. התקן את ההרחבה **File editor** דרך **Add-ons**, ופתח איתה את `configuration.yaml`.
-2. הדבק בסוף הקובץ את התוכן של [`homeassistant/configuration.yaml`](homeassistant/configuration.yaml).
+### שלב 3: הגדרות בממשק הזהוב
 
-   **חשוב:** אם כבר יש בקובץ `utility_meter:`, `sensor:` או `template:`, אל תשכפל אותם. הוסף את השורות החדשות מתחת לקטע הקיים. כפילות עלולה לגרום ל-Home Assistant להתעלם מאחד הקטעים, גם כש-Check configuration עובר.
-3. עדכן את המחיר שלך לקוט"ש ב-`price_with_vat`, ואת ההנחה ב-`discount_percent`.
-4. שמור, לחץ **Developer tools > YAML > Check configuration**, ואז בצע **Restart** מלא.
-5. ב-**Developer tools > States**, חפש `electricity_price` וודא שמופיע מחיר.
+<p align="center"><img src="images/ui-gold.png" alt="הממשק הזהוב של המכשיר" width="360"></p>
 
-### שלב 8: דשבורד
+גולשים ל-`http://electricity-meter.local` (או לכתובת ה-IP של המכשיר), ובוחרים:
 
-1. מ-HACS, התקן את `Mushroom`, `ApexCharts Card` ו-`card-mod`, ורענן את הדפדפן.
-2. בדשבורד, לחץ על העיפרון ואז **Add card > Manual**.
-3. מחק את מה שיש שם, הדבק את [`homeassistant/dashboard.yaml`](homeassistant/dashboard.yaml) ושמור.
-4. כוון את `max` בשעון העומס: `17` ל-3×25A, או `27` ל-3×40A.
+| הגדרה | מה זה | ברירת מחדל |
+|---|---|---|
+| **Supplier Plan** | מסלול הספק: ללא הנחה, מסלול של ספק, או "מותאם אישית" | ללא הנחה |
+| **Base Price** | מחיר לקוט"ש כולל מע"מ, לפני הנחה | 0.6352 ₪ (תעריף חברת החשמל מ-1.7.2026) |
+| **Fixed Charge** | תשלום קבוע לחודש, כולל מע"מ. נכנס לצפי, ולא מקבל הנחה | 31.97 ₪ (מונה תלת-פאזי, 1.7.2026) |
+| **Breaker Size** | גודל המפסק הראשי באמפר, לשעון העומס | 25 |
+| **Custom Discount** | במסלול מותאם: הנחה מחוץ לחלון השעות | 0% |
+| **Custom Window Start / End** | במסלול מותאם: חלון השעות (מותר לחצות חצות, למשל 23–7) | 23 / 7 |
+| **Custom Window Discount** | במסלול מותאם: הנחה בתוך החלון | 0% |
+| **Custom Window Sun-Thu Only** | במסלול מותאם: החלון רק בימים א'–ה' | כבוי |
 
-## 📦 קופסה להדפסה בתלת-ממד
+ההגדרות נשמרות במכשיר, וזמינות גם כישויות ב-Home Assistant.
 
-<p align="center">
-  <a href="https://makerworld.com/en/models/3523403-breakout-board-for-esp#profileId-4027704">
-    <img src="images/enclosure.jpg" alt="קופסה מודפסת עם ה-ESP32 בתוכה" width="320">
-  </a>
-</p>
+### שלב 4: Home Assistant
 
-תכננתי קופסת קיר ללוח, עם מכסה נשלף וחריצי אוורור. קובץ ההדפסה זמין ב-[MakerWorld](https://makerworld.com/en/models/3523403-breakout-board-for-esp#profileId-4027704).
+1. **Settings > Devices & services**. המכשיר `electricity-meter` מופיע כ-**Discovered**. לוחצים **Configure**.
+2. Home Assistant יוצר מפתח הצפנה ייחודי ושומר אותו במכשיר. אין מפתח קבוע בקושחה.
+3. **דשבורד האנרגיה:** ב-**Settings > Dashboards > Energy**, בוחרים `Energy Total` כצריכה מהרשת, ו-`Cost Total` כישות שעוקבת אחרי העלות.
+4. כרטיס תצוגה (לא חובה): [`homeassistant/dashboard.yaml`](homeassistant/dashboard.yaml) (דורש Mushroom, ApexCharts Card ו-card-mod מ-HACS).
 
-## מה מקבלים
+## כרטיס תלת-ממדי
 
-* **מצב הבית עכשיו** וכמה היום יעלה בקצב הנוכחי
-* **השוואה לאתמול באותה שעה**, באחוזים
-* **שיא יומי** והשעה שבה הוא קרה
-* **עלות** של היום והחודש, וצפי לסוף החודש
-* **עלות הצריכה כשכמעט הכול כבוי**, כדי לאתר מכשירים שדולקים כל הזמן
-* הספק, מתח וזרם בכל פאזה, וגרפים של 24 שעות ו-14 ימים
+*(יתווסף)*
+
+## מה המכשיר מחשב
+
+כל החישובים רצים על ה-ESP32. השעון מגיע מ-NTP באזור הזמן `Asia/Jerusalem`, כולל שעון קיץ, כך שהם עובדים גם בלי Home Assistant. הסטטיסטיקה נשמרת בזיכרון הפלאש כל 5 דקות ובכל חצות, ונשמרת גם אחרי הפסקת חשמל.
+
+| ישות | יחידה | הסבר |
+|---|---|---|
+| Price / Discount / Discount Window | ₪/קוט"ש, %, טקסט | המחיר עכשיו אחרי הנחה, ההנחה, וחלון ההנחה הפעיל (למשל `23:00–07:00`) |
+| Cost Now | ₪/שעה | הספק × מחיר |
+| Energy Today / Energy Month | קוט"ש | מתאפסים בחצות וב-1 לחודש |
+| Cost Today / Cost Month | ₪ | עלות הצריכה בלבד, לפי המחיר שהיה ברגע הצריכה |
+| Cost Total | ₪ | מצטבר, לא מתאפס. לדשבורד האנרגיה |
+| Forecast Month | ₪ | צפי לסוף החודש, כולל התשלום הקבוע. מתחיל ביום השני בחודש |
+| Energy Yesterday So Far / Compared To Yesterday | קוט"ש, % | אתמול עד אותה שעה, וההפרש באחוזים. מתחיל אחרי יממה מלאה ראשונה, ומוסתר בדקות הראשונות של היום |
+| Peak Today / Peak Time | kW, שעה | השיא היומי ומתי קרה |
+| Baseload / Baseload Cost | kW, ₪ לחודש | ההספק הנמוך ביותר ב-24 השעות האחרונות (ממוצע דקה), ועלותו בחודש לפי ממוצע ההנחה השבועי של המסלול |
+
+ועוד: הספק, מתח וזרם לכל פאזה, אנרגיה לפי תעריף (T1–T3), החזרה לרשת, תעריף פעיל, ודיאגנוסטיקה: `P1 Data`, `P1 CRC Errors`, `Uptime`, `WiFi Signal`, `IP Address`, `Firmware Version`. הכפתור **Reset Statistics** מאפס את היום, החודש, אתמול, השיא וה-Baseload (לא את `Cost Total`).
+
+שמות הישויות זהים לגרסה 1, כך שההיסטוריה של `sensor.electricity_meter_*` נשמרת במעבר.
+
+## עדכוני קושחה (OTA)
+
+| דרך | איך |
+|---|---|
+| **מ-Home Assistant** | כשיוצאת גרסה, הישות `update.electricity_meter_firmware` מציעה אותה. לוחצים **Install**. המכשיר מוריד את הקובץ מ-GitHub Pages ובודק MD5 |
+| **מהממשק הזהוב** | בחלק העדכון מעלים קובץ `.ota.bin` מ-[Releases](https://github.com/moshiko2312/iec-p1-esphome-3phase/releases). הממשק שולח אותו ל-`POST /update` |
+| **מ-ESPHome Device Builder** | אחרי **Take control** (ראה בהמשך), OTA רגיל של ESPHome |
+
+אם עדכון נכשל באמצע, המכשיר נשאר על הגרסה הקודמת. אחרי 10 אתחולים כושלים ברצף הוא עולה ב-Safe Mode, שבו עדיין אפשר לעדכן. יש גם כפתור **Safe Mode**.
+
+## התאמה אישית ב-ESPHome (לא חובה)
+
+מי שרוצה לשנות את הקוד: ב-ESPHome Device Builder המכשיר מופיע כ-**Discovered**. לוחצים **Take control**, והקונפיגורציה מיובאת מהריפו (`esphome/electricity-meter-esp32.yaml` או `-poe.yaml`) ונבנית מקוד המקור. אחרי זה העדכונים מגיעים מהבנייה שלך, ולא מישות העדכון.
+
+## מסלולי ספקים
+
+המסלולים מוגדרים ב-[`esphome/common/plans.yaml`](esphome/common/plans.yaml): רשימת האפשרויות, וטבלת C++ בסדר זהה (אחוז מחוץ לחלונות, ועד 3 חלונות עם ימים, שעות ואחוז). **המסלול הנבחר נשמר לפי המיקום ברשימה**, לכן מוסיפים מסלולים רק בסוף ולא משנים סדר.
+
+## אבטחה
+
+* אין סיסמאות או מפתחות קבועים בקושחה. מפתח ההצפנה של ה-API נוצר על ידי Home Assistant בחיבור הראשון.
+* הנקודה החמה פתוחה (בלי סיסמה), כי סיסמה קבועה בקושחה מוכנה הייתה ידועה לכולם. היא עולה רק כשאין למכשיר רשת שמורה או כשהרשת לא זמינה, ומאפשרת רק לבחור רשת.
+* הממשק המקומי והעלאת הקושחה (`/update`) לא מוגנים בסיסמה. השאר את המכשיר ברשת הביתית בלבד. מי שרוצה סיסמה: Take control והוספת `web_server: auth`.
 
 ## קודי OBIS שנמצאו במונה
 
@@ -192,23 +204,53 @@ ap_password: "סיסמה שתבחר"
 
 ## הגבלות
 
-* העלות מחושבת לפי מחיר קבוע, ולא כוללת תשלום קבוע אלא אם הוספת אותו ב-`fixed_charge`.
-* הנחה לפי שעות עדיין לא נתמכת.
-* הצפי הוא לפי חודש קלנדרי, ולא לפי תקופת החשבון.
-* ההשוואה לאתמול מתחילה לעבוד רק אחרי יממה מלאה של נתונים.
+* החודש הוא חודש קלנדרי, ולא תקופת החשבון.
+* תעו"ז של חברת החשמל (מחיר בסיס לפי עונה ושעה) עדיין לא נתמך. ההנחות של הספקים כן.
+* העלות לא כוללת את תשלום ההספק השנתי לפי KVA.
 * הפרויקט נבדק על מונה אחד בלבד, וקודים עשויים להיות שונים במונים אחרים.
 
 ## תקלות נפוצות
 
 | תקלה | מה לבדוק |
 |---|---|
-| המכשיר Offline אחרי עדכון | אם פרטי ה-Wi-Fi הוזנו רק דרך הדף `192.168.4.1`, הם עלולים להימחק בעדכון. שמור אותם ב-`secrets.yaml`. |
-| `bad CRC` חוזר | החיווט, הנגדים וה-`inverted: true`. |
-| כרטיסים מציגים 0, `None` או `Entity not available` | שהמכשיר נוסף ל-Home Assistant, שהקטע נמצא ב-`configuration.yaml` בלי כפילויות, ושבוצע Restart מלא. |
+| `P1 Data` כבוי | החיווט, שני הנגדים, ושהתקע יושב עד הסוף במונה |
+| `P1 CRC Errors` עולה כל הזמן | החיווט והנגדים. שגיאה בודדת מדי פעם תקינה |
+| הנקודה החמה לא מופיעה | היא עולה רק כשאין רשת שמורה, או אחרי דקה וחצי בלי חיבור |
+| `electricity-meter.local` לא נפתח | חלק מהטלפונים לא תומכים ב-`.local`. השתמש בכתובת ה-IP מהנתב |
+| ההשוואה לאתמול ריקה | היא מתחילה אחרי יממה מלאה ראשונה מחצות לחצות |
+
+## למפתחים
+
+```
+esphome/
+  electricity-meter-esp32.yaml          קונפיגורציה לכל לוח (מה ש-Take control מייבא)
+  electricity-meter-esp32.factory.yaml  הקושחה המוכנה: + improv, עדכונים, פרטי פרויקט
+  electricity-meter-poe(.factory).yaml
+  boards/          הגדרות לוח: esp32-devkit (Wi-Fi), est-poe-32 (Ethernet)
+  common/p1.yaml   קריאת P1, חיישני המונה, דיאגנוסטיקה
+  common/cost.yaml הגדרות, שעון, וחיישני העלות
+  common/plans.yaml מסלולי הספקים
+  common/web.yaml  שרת האינטרנט והעלאת קושחה
+  common/iec_p1.h  מנוע העלות והמסלולים (C++)
+  components/captive_portal/  עמוד ה-Wi-Fi הזהוב (עותק מותאם של רכיב ESPHome)
+  ui/              הממשק הזהוב ועמוד ה-Wi-Fi
+static/            דף ההתקנה (GitHub Pages)
+tests/             בדיקות שרצות על מחשב
+```
+
+**בדיקות** (רצות גם ב-CI):
+
+```bash
+python3 tests/run_parser_test.py     # פענוח P1 עם טלגרם אמיתי, CRC שגוי, טלגרם קטוע
+g++ -std=c++17 -I esphome/common -o /tmp/t tests/test_engine.cpp && /tmp/t   # מנוע העלות והמסלולים
+python3 tests/run_lambda_test.py     # הקוד שבקובצי ה-YAML
+```
+
+**שחרור גרסה:** מגדירים פעם אחת **Settings > Pages > Source: GitHub Actions**. לכל גרסה, מפרסמים Release עם תגית (למשל `2.0.0`). ה-workflow **Build firmware** בונה את שני הלוחות ומצרף את הקבצים ל-Release, ו-**Publish site** מעלה את דף ההתקנה ואת הקושחה ל-`firmware/esp32/` ול-`firmware/poe/`. משם המכשירים מקבלים את העדכון.
 
 ## קרדיט ורישיון
 
-מבוסס על [iec-p1-esphome](https://github.com/klimofey/iec-p1-esphome) מאת Timofey Klimov, ברישיון MIT.
-הפרויקט הזה מופץ גם הוא ברישיון MIT. ראה [`LICENSE`](LICENSE).
+מבוסס על [iec-p1-esphome](https://github.com/klimofey/iec-p1-esphome) מאת Timofey Klimov, ועל [iec-p1-esphome-3phase](https://github.com/mp3llll/iec-p1-esphome-3phase) מאת Yanir, שניהם ברישיון MIT. הפרויקט הזה מופץ גם הוא ברישיון MIT, עם הודעות זכויות היוצרים שלהם, ראה [`LICENSE`](LICENSE).
+התיקייה [`esphome/components/captive_portal`](esphome/components/captive_portal) היא עותק מותאם של רכיב מ-[ESPHome](https://github.com/esphome/esphome): קוד ה-C++ שבה ברישיון GPLv3, וקוד ה-Python ברישיון MIT. ראה `NOTICE` שם.
 
-**לשימוש על אחריותך בלבד.** אין קשר לחברת החשמל או ל-Kaifa.
+**לשימוש על אחריותך בלבד.** אין קשר לחברת החשמל, ל-Kaifa או ל-Everything Smart Technology.

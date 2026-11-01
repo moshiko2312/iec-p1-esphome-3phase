@@ -2,7 +2,7 @@
 # Built by GitHub Actions and installed from the web installer or web.esphome.io.
 
 substitutions:
-  github_owner: mp3llll
+  github_owner: moshiko2312
   github_repo: iec-p1-esphome-3phase
   firmware_variant: poe
 

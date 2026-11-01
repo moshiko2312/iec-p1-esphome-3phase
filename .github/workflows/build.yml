@@ -45,7 +45,7 @@ jobs:
       - name: YAML lambdas
         run: python3 tests/run_lambda_test.py
       - name: Plan tables in sync
-        if: hashFiles('tools/gen_plans.py') != ''
+        if: hashFiles('tools/gen_plans.py') != '' && hashFiles('plans/israel_electricity_plans.json') != ''
         run: python3 tools/gen_plans.py --check
 
   build:
