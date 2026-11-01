@@ -1,0 +1,39 @@
+# 30-pin ESP32 DevKit (ESP32-WROOM-32 / ESP32-32D) on a screw-terminal breakout,
+# powered from the meter's P1 port. Connects over Wi-Fi.
+
+substitutions:
+  p1_rx_pin: GPIO16  # RX2
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+wifi:
+  # No network is compiled in. On first boot, and whenever the saved network
+  # can't be reached for a minute, the device opens a hotspot named after itself
+  # (electricity-meter) with a setup page for choosing a Wi-Fi network.
+  # Networks saved this way are kept across firmware updates.
+  ap: {}
+
+captive_portal:
+
+# Gold Wi-Fi setup page: a modified copy of ESPHome's captive_portal that serves
+# esphome/ui/portal.html. The path is relative to this file.
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [captive_portal]
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+      entity_category: diagnostic

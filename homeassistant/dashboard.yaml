@@ -1,5 +1,10 @@
+# Optional Home Assistant card. All values come from the device itself, so no
+# YAML is needed in Home Assistant: this card only displays them.
 # Requires from HACS: Mushroom, ApexCharts Card, card-mod (for right-to-left layout).
-# Paste into a Manual card. Set max: 17 for 3x25A, or 27 for 3x40A.
+# Paste into a Manual card.
+#
+# One colour scale for power everywhere: under 1 kW green, under 3 amber,
+# under 6 orange, above that red.
 type: custom:mod-card
 card_mod:
   style: |
@@ -17,7 +22,7 @@ card:
     title: ⚡ חשמל בבית
     subtitle: >
       {{ states('sensor.electricity_meter_power') | float(0) | round(2) }} kW עכשיו ·
-      ₪{{ states('sensor.electricity_cost_now') | float(0) | round(2) }} לשעה
+      ₪{{ states('sensor.electricity_meter_cost_now') | float(0) | round(2) }} לשעה
 
   - type: custom:mushroom-template-card
     entity: sensor.electricity_meter_power
@@ -26,89 +31,113 @@ card:
       {% set power = states('sensor.electricity_meter_power') | float(0) %}
       {{ 'green' if power < 1 else 'amber' if power < 3 else 'orange' if power < 6 else 'red' }}
     primary: >
-      {% set power = states('sensor.electricity_meter_power') | float(0) %}
-      {% if power < 1 %}🟢 הבית רגוע
-      {% elif power < 3 %}🟡 צריכה בינונית
-      {% elif power < 6 %}🟠 צריכה גבוהה
+      {% set power = states('sensor.electricity_meter_power') %}
+      {% if not is_number(power) %}⚪ אין נתונים מהמונה
+      {% elif power | float < 1 %}🟢 הבית רגוע
+      {% elif power | float < 3 %}🟡 צריכה בינונית
+      {% elif power | float < 6 %}🟠 צריכה גבוהה
       {% else %}🔴 צריכה גבוהה מאוד{% endif %}
     secondary: >
       {% set hours = now().hour + now().minute / 60 %}
-      {% set today = states('sensor.electricity_cost_today') | float(0) %}
-      {{ 'בקצב הזה היום יעלה ₪' ~ ((today / hours * 24) | round(0)) if hours >= 2 else 'התחזית להיום תופיע בהמשך היום' }}
+      {% set today = states('sensor.electricity_meter_cost_today') | float(0) %}
+      {{ 'בקצב הזה היום יעלה ₪' ~ ((today / hours * 24) | round(0)) if hours >= 2 else 'התחזית להיום תופיע אחרי 02:00' }}
 
   - type: custom:mushroom-template-card
-    entity: sensor.electricity_compared_to_yesterday
+    entity: sensor.electricity_meter_price
+    icon: mdi:cash
+    icon_color: >
+      {{ 'green' if states('sensor.electricity_meter_discount') | float(0) > 0 else 'grey' }}
+    primary: >
+      ₪{{ states('sensor.electricity_meter_price') | float(0) | round(4) }} לקוט״ש עכשיו
+    secondary: >
+      {% set discount = states('sensor.electricity_meter_discount') | float(0) %}
+      {% set window = states('sensor.electricity_meter_discount_window') %}
+      {{ states('select.electricity_meter_supplier_plan') }}
+      {%- if discount > 0 %} · הנחה {{ discount | round(1) }}%{% endif %}
+      {%- if window not in ['', 'unknown', 'unavailable'] %} ({{ window }}){% endif %}
+
+  - type: custom:mushroom-template-card
+    entity: sensor.electricity_meter_compared_to_yesterday
     icon: mdi:compare-horizontal
     icon_color: >
-      {% set change = states('sensor.electricity_compared_to_yesterday') %}
+      {% set change = states('sensor.electricity_meter_compared_to_yesterday') %}
       {% if not is_number(change) %}grey
       {% elif change | float > 5 %}red
       {% elif change | float < -5 %}green
       {% else %}blue{% endif %}
     primary: >
-      {% set change = states('sensor.electricity_compared_to_yesterday') %}
-      {% if not is_number(change) %}ההשוואה לאתמול עוד לא מוכנה
-      {% elif change | float > 5 %}🔴 {{ change | float | round(0) }}% יותר מאתמול באותה שעה
-      {% elif change | float < -5 %}🟢 {{ (change | float | abs) | round(0) }}% פחות מאתמול באותה שעה
-      {% else %}🔵 בערך כמו אתמול באותה שעה{% endif %}
+      {% set change = states('sensor.electricity_meter_compared_to_yesterday') %}
+      {% set yesterday = states('sensor.electricity_meter_energy_yesterday_so_far') %}
+      {% if is_number(change) %}
+        {% if change | float > 5 %}🔴 {{ change | float | round(0) }}% יותר מאתמול באותה שעה
+        {% elif change | float < -5 %}🟢 {{ (change | float | abs) | round(0) }}% פחות מאתמול באותה שעה
+        {% else %}🔵 בערך כמו אתמול באותה שעה{% endif %}
+      {% elif is_number(yesterday) %}מוקדם מדי היום להשוואה
+      {% else %}ההשוואה תתחיל אחרי יממה מלאה ראשונה{% endif %}
     secondary: >
-      {% set yesterday = states('sensor.electricity_yesterday_so_far') %}
-      {% if is_number(yesterday) %}היום {{ states('sensor.electricity_daily') | float(0) | round(1) }} kWh · אתמול עד עכשיו {{ yesterday | float | round(1) }} kWh
-      {% else %}צריך יממה מלאה של נתונים{% endif %}
+      {% set yesterday = states('sensor.electricity_meter_energy_yesterday_so_far') %}
+      היום {{ states('sensor.electricity_meter_energy_today') | float(0) | round(1) }} kWh
+      {%- if is_number(yesterday) %} · אתמול עד עכשיו {{ yesterday | float | round(1) }} kWh{% endif %}
 
   - type: custom:mushroom-template-card
-    entity: sensor.electricity_peak_today
+    entity: sensor.electricity_meter_peak_today
     icon: mdi:chart-bell-curve
     icon_color: deep-orange
     primary: >
-      שיא היום: {{ states('sensor.electricity_peak_today') | float(0) | round(2) }} kW
-      בשעה {{ state_attr('sensor.electricity_peak_today', 'peak_time') }}
+      {% set peak = states('sensor.electricity_meter_peak_today') %}
+      {% if is_number(peak) %}שיא היום: {{ peak | float | round(2) }} kW בשעה {{ states('sensor.electricity_meter_peak_time') }}
+      {% else %}עוד אין שיא היום{% endif %}
     secondary: >
-      באותו רגע זה עלה ₪{{ (states('sensor.electricity_peak_today') | float(0)
-      * states('sensor.electricity_price') | float(0)) | round(2) }} לשעה
+      באותו רגע זה עלה ₪{{ (states('sensor.electricity_meter_peak_today') | float(0)
+      * states('sensor.electricity_meter_price') | float(0)) | round(2) }} לשעה
 
   - type: custom:mushroom-template-card
-    entity: sensor.electricity_baseload_cost
+    entity: sensor.electricity_meter_baseload_cost
     icon: mdi:weather-night
     icon_color: >
-      {{ 'red' if states('sensor.electricity_baseload') | float(0) > 0.5 else 'green' }}
-    primary: ₪{{ states('sensor.electricity_baseload_cost') | float(0) | round(0) }} לחודש כשכמעט הכול כבוי
+      {{ 'red' if states('sensor.electricity_meter_baseload') | float(0) > 0.5 else 'green' }}
+    primary: >
+      {% set cost = states('sensor.electricity_meter_baseload_cost') %}
+      {{ '₪' ~ (cost | float | round(0)) ~ ' לחודש כשכמעט הכול כבוי' if is_number(cost) else 'צריכת הבסיס תחושב אחרי כמה שעות' }}
     secondary: >
-      {{ 'גבוה, כדאי לבדוק מה דולק כל הזמן' if states('sensor.electricity_baseload') | float(0) > 0.5 else 'תקין' }}
+      {% set base = states('sensor.electricity_meter_baseload') %}
+      {% if is_number(base) %}{{ (base | float * 1000) | round(0) }} W ·
+      {{ 'גבוה, כדאי לבדוק מה דולק כל הזמן' if base | float > 0.5 else 'תקין' }}{% endif %}
 
   - type: grid
     columns: 2
     square: false
     cards:
       - type: custom:mushroom-template-card
-        entity: sensor.electricity_cost_today
+        entity: sensor.electricity_meter_cost_today
         icon: mdi:calendar-today
         icon_color: teal
-        primary: ₪{{ states('sensor.electricity_cost_today') | float(0) | round(1) }}
-        secondary: היום · {{ states('sensor.electricity_daily') | float(0) | round(1) }} kWh
+        primary: ₪{{ states('sensor.electricity_meter_cost_today') | float(0) | round(1) }}
+        secondary: היום · {{ states('sensor.electricity_meter_energy_today') | float(0) | round(1) }} kWh
       - type: custom:mushroom-template-card
-        entity: sensor.electricity_cost_month
+        entity: sensor.electricity_meter_cost_month
         icon: mdi:calendar-month
         icon_color: blue
-        primary: ₪{{ states('sensor.electricity_cost_month') | float(0) | round(0) }}
-        secondary: החודש · {{ states('sensor.electricity_monthly') | float(0) | round(0) }} kWh
+        primary: ₪{{ states('sensor.electricity_meter_cost_month') | float(0) | round(0) }}
+        secondary: החודש · {{ states('sensor.electricity_meter_energy_month') | float(0) | round(0) }} kWh
       - type: custom:mushroom-template-card
-        entity: sensor.electricity_forecast_month
+        entity: sensor.electricity_meter_forecast_month
         icon: mdi:crystal-ball
         icon_color: purple
         primary: >
-          {% set forecast = states('sensor.electricity_forecast_month') %}
+          {% set forecast = states('sensor.electricity_meter_forecast_month') %}
           {{ '₪' ~ (forecast | float | round(0)) if is_number(forecast) else 'מחר' }}
-        secondary: צפי לסוף החודש
+        secondary: צפי לסוף החודש, כולל תשלום קבוע
       - type: custom:mushroom-template-card
-        entity: sensor.electricity_meter_power
+        entity: sensor.electricity_meter_cost_now
         icon: mdi:lightning-bolt
         icon_color: >
           {% set power = states('sensor.electricity_meter_power') | float(0) %}
-          {{ 'red' if power >= 10 else 'amber' if power >= 5 else 'green' }}
-        primary: ₪{{ states('sensor.electricity_cost_now') | float(0) | round(2) }} לשעה
+          {{ 'green' if power < 1 else 'amber' if power < 3 else 'orange' if power < 6 else 'red' }}
+        primary: ₪{{ states('sensor.electricity_meter_cost_now') | float(0) | round(2) }} לשעה
         secondary: עלות עכשיו
 
+  # Load as a share of what the main breaker allows (3 phases × 230 V × breaker size).
   - type: custom:apexcharts-card
     chart_type: radialBar
     header:
@@ -117,10 +146,14 @@ card:
       show_states: false
     series:
       - entity: sensor.electricity_meter_power
-        name: kW
+        name: עומס
+        unit: "%"
         min: 0
-        max: 17
+        max: 100
         color: "#00e5a0"
+        transform: >-
+          const amps = parseFloat(hass.states['number.electricity_meter_breaker_size']?.state) || 25;
+          return Math.min(100, x / (3 * 230 * amps / 1000) * 100);
     apex_config:
       chart:
         height: 220

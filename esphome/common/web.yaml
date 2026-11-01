@@ -1,0 +1,15 @@
+# Local web page served by the device: live values, settings and firmware upload.
+# The page itself is esphome/ui/app.js, built into the firmware (no internet needed).
+
+web_server:
+  version: 3
+  port: 80
+  # Paths are relative to this file, so they also work after "Take control".
+  js_include: ../ui/app.js
+  js_url: ""
+  log: false
+
+# Firmware upload from the web page: POST /update (multipart form).
+ota:
+  - platform: web_server
+    id: ota_web

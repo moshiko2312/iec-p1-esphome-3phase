@@ -1,0 +1,23 @@
+# IEC P1 reader for an Israeli Kaifa three-phase meter - 30-pin ESP32 DevKit, Wi-Fi.
+# This is the configuration that ESPHome Device Builder adopts ("Take control").
+# The prebuilt firmware is electricity-meter-esp32.factory.yaml, which adds
+# the Wi-Fi setup screen, the update entity and project information on top.
+
+substitutions:
+  name: electricity-meter
+  friendly_name: Electricity meter
+
+packages:
+  board: !include boards/esp32-devkit.yaml
+  p1: !include common/p1.yaml
+  cost: !include common/cost.yaml
+  plans: !include common/plans.yaml
+  web: !include common/web.yaml
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  # Kept off so entity IDs stay sensor.electricity_meter_* (as in v1).
+  # A second reader on the same network needs a different name.
+  name_add_mac_suffix: false
+  min_version: 2026.10.0

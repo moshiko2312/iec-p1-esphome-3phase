@@ -1,0 +1,30 @@
+# Everything Smart Technology EST-PoE-32 (ESP32-WROOM-32E + LAN8720).
+# Powered over Ethernet (PoE), USB-C or 9-28V DC. Never from the meter's P1 +5V.
+# Ethernet settings are from the vendor's own config:
+# https://github.com/EverythingSmartHome/firmware/tree/main/EST-PoE-32/ESPHome
+
+substitutions:
+  # GPIO36 is input-only, not used by the Ethernet PHY, and sits on the same
+  # header as 3V3, so the pull-up resistor is easy to fit. GPIO16 also works.
+  p1_rx_pin: GPIO36
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk:
+    pin: GPIO17
+    mode: CLK_OUT
+  phy_addr: 0
+  power_pin: GPIO12
+
+text_sensor:
+  - platform: ethernet_info
+    ip_address:
+      name: "IP Address"
+      entity_category: diagnostic

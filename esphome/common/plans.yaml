@@ -1,0 +1,96 @@
+# Supplier plans: the "Supplier Plan" select and the plan table that drives it.
+#
+# Two lists that MUST match, entry for entry and in the same order:
+#   1. the select options          (between "# BEGIN PLANS" and "# END PLANS")
+#   2. the PLANS table in C++      (between "// BEGIN PLANS" and "// END PLANS")
+# The chosen plan is stored by its position in the list, so add new plans at the
+# end only. Never reorder or remove entries, or devices will switch plans.
+
+select:
+  - platform: template
+    id: supplier_plan
+    name: "Supplier Plan"
+    icon: mdi:handshake
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    initial_option: "ללא הנחה"
+    options:
+      # BEGIN PLANS
+      - "ללא הנחה"
+      - "מותאם אישית"
+      # END PLANS
+    on_value:
+      - script.execute: update_price
+
+script:
+  # Works out the discount for the selected plan at the current local time,
+  # then the effective price. Runs every minute and whenever a setting changes.
+  - id: update_price
+    then:
+      - lambda: |-
+          using iecp1::Plan;
+          using iecp1::Window;
+          // label, base_pct (outside windows), number of windows,
+          // {{days, from_min, to_min, pct}, ...} with up to 3 windows.
+          // days: Sun=0x01 Mon=0x02 Tue=0x04 Wed=0x08 Thu=0x10 Fri=0x20 Sat=0x40,
+          //       iecp1::SUN_TO_THU (0x1F), iecp1::EVERY_DAY (0x7F).
+          // from_min/to_min: minutes after midnight, to is exclusive, may cross midnight.
+          // base_pct NAN = built from the Custom* settings.
+          static const Plan PLANS[] = {
+              // BEGIN PLANS
+              {"ללא הנחה", 0, 0, {}},
+              {"מותאם אישית", NAN, 0, {}},
+              // END PLANS
+          };
+
+          const auto option = id(supplier_plan).current_option();
+          const Plan *plan = nullptr;
+          for (const auto &p : PLANS) {
+            if (option == p.label) {
+              plan = &p;
+              break;
+            }
+          }
+
+          Plan custom{"מותאם אישית", 0, 0, {}};
+          if (plan != nullptr && std::isnan(plan->base_pct)) {
+            custom.base_pct = id(custom_discount).state;
+            const int from = (int) id(custom_window_start).state;
+            const int to = (int) id(custom_window_end).state;
+            const float pct = id(custom_window_discount).state;
+            if (pct > 0 && from != to && from >= 0 && to >= 0) {
+              const uint8_t days = id(custom_window_sun_thu).state ? iecp1::SUN_TO_THU : iecp1::EVERY_DAY;
+              custom.count = 1;
+              custom.windows[0] = Window{days, (uint16_t) (from * 60), (uint16_t) (to * 60), pct};
+            }
+            plan = &custom;
+          }
+          if (plan == nullptr)
+            ESP_LOGW("plans", "Plan '%s' is missing from the PLANS table", option.empty() ? "" : option.c_str());
+
+          float discount = 0;
+          float weekly = 0;
+          std::string window;
+          if (plan != nullptr) {
+            discount = plan->base_pct;
+            weekly = iecp1::weekly_average(*plan);
+            const auto t = iecp1::to_local(id(sntp_time).now());
+            if (t.valid) {
+              const int i = iecp1::match_window(*plan, t.dow, t.minute);
+              if (i >= 0) {
+                discount = plan->windows[i].pct;
+                window = iecp1::window_label(plan->windows[i]);
+              }
+            }
+          }
+
+          const float base = id(base_price).state;
+          const float price = (std::isnan(base) || base <= 0) ? NAN : base * (1.0f - discount / 100.0f);
+          iecp1::engine().set_price(price, discount, weekly, window);
+
+          id(price_sensor).publish_state(price);
+          id(discount_sensor).publish_state(discount);
+          if (id(discount_window).state != window)
+            id(discount_window).publish_state(window);
+      - script.execute: publish_live

@@ -1,0 +1,282 @@
+# Shared logic for reading the P1 port of an Israeli IEC Kaifa three-phase meter.
+# Every board file includes this package. A board sets `p1_rx_pin` and its network.
+#
+# How a telegram is handled:
+#   1. Bytes are collected from '/' up to the "!XXXX" footer line.
+#   2. CRC16/ARC is checked over the complete telegram ('/' .. '!').
+#   3. Only a telegram with a valid CRC is parsed and published.
+# Nothing from an incomplete or corrupted telegram ever reaches Home Assistant.
+
+substitutions:
+  p1_rx_pin: GPIO16
+  # How often each kind of value is sent to Home Assistant.
+  power_interval: 5s
+  voltage_current_interval: 30s
+  energy_interval: 60s
+  # If no valid telegram arrives for this long, the value becomes "unknown"
+  # instead of freezing on the last reading. Always longer than the interval.
+  power_timeout: 30s
+  voltage_current_timeout: 75s
+  energy_timeout: 150s
+
+logger:
+  level: INFO
+
+api:
+  # No key is baked into the firmware. Home Assistant generates a unique key
+  # and stores it on the device the first time it connects.
+  encryption: {}
+
+ota:
+  - platform: esphome
+    id: ota_esphome
+
+safe_mode:
+
+uart:
+  id: uart_p1
+  rx_pin:
+    number: ${p1_rx_pin}
+    inverted: true
+  baud_rate: 115200
+  rx_buffer_size: 2048
+
+interval:
+  - interval: 50ms
+    then:
+      - lambda: |-
+          static constexpr size_t MAX_TELEGRAM = 3072;
+          static constexpr uint32_t STALE_MS = 30000;
+          static std::string telegram;
+          static size_t line_start = 0;
+          static bool collecting = false;
+          static uint32_t crc_errors = 0;
+          static uint32_t last_ok = 0;
+          static bool first_ok = true;
+
+          struct Field {
+            const char *obis;
+            sensor::Sensor *sensor;
+          };
+          // The first six entries are summed into the totals, keep their order.
+          const Field fields[] = {
+              {"1-0:1.8.11", id(energy_t1)},   {"1-0:1.8.12", id(energy_t2)},
+              {"1-0:1.8.13", id(energy_t3)},   {"1-0:2.8.11", id(export_t1)},
+              {"1-0:2.8.12", id(export_t2)},   {"1-0:2.8.13", id(export_t3)},
+              {"0-0:96.14.1", id(tariff)},     {"1-0:1.7.0", id(power)},
+              {"1-0:2.7.0", id(power_export)}, {"1-0:21.7.0", id(power_l1)},
+              {"1-0:41.7.0", id(power_l2)},    {"1-0:61.7.0", id(power_l3)},
+              {"1-0:32.7.0", id(voltage_l1)},  {"1-0:52.7.0", id(voltage_l2)},
+              {"1-0:72.7.0", id(voltage_l3)},  {"1-0:31.7.0", id(current_l1)},
+              {"1-0:51.7.0", id(current_l2)},  {"1-0:71.7.0", id(current_l3)},
+          };
+          constexpr size_t FIELD_COUNT = sizeof(fields) / sizeof(fields[0]);
+
+          if (telegram.capacity() < MAX_TELEGRAM) telegram.reserve(MAX_TELEGRAM);
+          if (!id(p1_crc_errors).has_state()) id(p1_crc_errors).publish_state(0);
+
+          uint8_t c;
+          while (id(uart_p1).available() > 0 && id(uart_p1).read_byte(&c)) {
+            // '/' only ever appears as the first byte of a telegram, so it always
+            // starts a new one, even if the previous telegram was cut off.
+            if (c == '/') {
+              telegram.clear();
+              line_start = 0;
+              collecting = true;
+            }
+            if (!collecting) continue;
+            if (telegram.size() >= MAX_TELEGRAM) {
+              ESP_LOGW("p1", "Telegram longer than %u bytes, discarded", (unsigned) MAX_TELEGRAM);
+              collecting = false;
+              telegram.clear();
+              continue;
+            }
+            telegram.push_back((char) c);
+            if (c != '\n') continue;
+
+            const size_t this_line = line_start;
+            line_start = telegram.size();
+            if (telegram[this_line] != '!') continue;
+
+            // Footer line: '!' + 4 hex digits + CR LF. The CRC covers '/' .. '!'.
+            collecting = false;
+            uint16_t crc = 0;
+            for (size_t i = 0; i <= this_line; i++) {
+              crc ^= (uint8_t) telegram[i];
+              for (int bit = 0; bit < 8; bit++)
+                crc = (crc & 1) ? (crc >> 1) ^ 0xA001 : crc >> 1;
+            }
+            const char *crc_text = telegram.c_str() + this_line + 1;
+            char *crc_end = nullptr;
+            const unsigned long expected = strtoul(crc_text, &crc_end, 16);
+            if (crc_end != crc_text + 4 || expected != crc) {
+              crc_errors++;
+              id(p1_crc_errors).publish_state(crc_errors);
+              ESP_LOGW("p1", "Telegram dropped: bad CRC (calculated %04X, footer %.4s)", crc, crc_text);
+              continue;
+            }
+
+            // CRC is valid: parse every line of the telegram.
+            float values[FIELD_COUNT];
+            for (auto &value : values) value = NAN;
+            size_t pos = 0;
+            while (pos < this_line) {
+              const size_t eol = telegram.find('\n', pos);
+              if (eol == std::string::npos || eol > this_line) break;
+              const size_t paren = telegram.find('(', pos);
+              if (paren != std::string::npos && paren < eol) {
+                for (size_t f = 0; f < FIELD_COUNT; f++) {
+                  const size_t len = strlen(fields[f].obis);
+                  if (paren - pos == len && telegram.compare(pos, len, fields[f].obis) == 0) {
+                    const char *number = telegram.c_str() + paren + 1;
+                    char *number_end = nullptr;
+                    const float value = strtof(number, &number_end);
+                    if (number_end != number && (*number_end == '*' || *number_end == ')'))
+                      values[f] = value;
+                    break;
+                  }
+                }
+              }
+              pos = eol + 1;
+            }
+
+            for (size_t f = 0; f < FIELD_COUNT; f++)
+              if (!std::isnan(values[f])) fields[f].sensor->publish_state(values[f]);
+            // Totals only when all three tariffs are present, so they never drop to a partial sum.
+            if (!std::isnan(values[0]) && !std::isnan(values[1]) && !std::isnan(values[2]))
+              id(energy_total).publish_state(values[0] + values[1] + values[2]);
+            if (!std::isnan(values[3]) && !std::isnan(values[4]) && !std::isnan(values[5]))
+              id(export_total).publish_state(values[3] + values[4] + values[5]);
+
+            last_ok = millis();
+            if (first_ok) {
+              ESP_LOGI("p1", "First valid telegram received");
+              first_ok = false;
+            }
+          }
+
+          const bool fresh = last_ok != 0 && millis() - last_ok < STALE_MS;
+          if (!id(p1_data).has_state() || id(p1_data).state != fresh) id(p1_data).publish_state(fresh);
+
+# Shared sensor settings. Top-level keys starting with "." are ignored by ESPHome.
+.sensor_templates:
+  energy: &energy
+    platform: template
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 3
+    update_interval: never
+    filters:
+      - throttle: ${energy_interval}
+      - timeout: ${energy_timeout}
+  power: &power
+    platform: template
+    unit_of_measurement: kW
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 3
+    update_interval: never
+    filters:
+      - throttle: ${power_interval}
+      - timeout: ${power_timeout}
+  # Voltage and current fill the database fast, so they are sent less often.
+  voltage: &voltage
+    platform: template
+    unit_of_measurement: V
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: never
+    filters:
+      - throttle: ${voltage_current_interval}
+      - timeout: ${voltage_current_timeout}
+  current: &current
+    platform: template
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: never
+    filters:
+      - throttle: ${voltage_current_interval}
+      - timeout: ${voltage_current_timeout}
+
+sensor:
+  # Names are the same as in v1, so entity IDs and history are kept.
+  - {<<: *energy, id: energy_t1, name: "Energy T1"}
+  - {<<: *energy, id: energy_t2, name: "Energy T2"}
+  - {<<: *energy, id: energy_t3, name: "Energy T3"}
+  - {<<: *energy, id: export_t1, name: "Export T1"}
+  - {<<: *energy, id: export_t2, name: "Export T2"}
+  - {<<: *energy, id: export_t3, name: "Export T3"}
+  - <<: *energy
+    id: energy_total
+    name: "Energy Total"
+    on_value:
+      - script.execute:
+          id: on_energy_total
+          kwh: !lambda return x;
+  - {<<: *energy, id: export_total, name: "Export Total"}
+
+  - <<: *power
+    id: power
+    name: "Power"
+    on_value:
+      - script.execute:
+          id: on_power
+          kw: !lambda return x;
+  - {<<: *power, id: power_export, name: "Power Export"}
+  - {<<: *power, id: power_l1, name: "Power L1"}
+  - {<<: *power, id: power_l2, name: "Power L2"}
+  - {<<: *power, id: power_l3, name: "Power L3"}
+
+  - {<<: *voltage, id: voltage_l1, name: "Voltage L1"}
+  - {<<: *voltage, id: voltage_l2, name: "Voltage L2"}
+  - {<<: *voltage, id: voltage_l3, name: "Voltage L3"}
+
+  - {<<: *current, id: current_l1, name: "Current L1"}
+  - {<<: *current, id: current_l2, name: "Current L2"}
+  - {<<: *current, id: current_l3, name: "Current L3"}
+
+  - platform: template
+    id: tariff
+    name: "Active Tariff"
+    icon: mdi:cash-clock
+    accuracy_decimals: 0
+    update_interval: never
+    filters:
+      - throttle: ${energy_interval}
+      - timeout: ${energy_timeout}
+
+  # Diagnostics
+  - platform: template
+    id: p1_crc_errors
+    name: "P1 CRC Errors"
+    icon: mdi:alert-circle-outline
+    state_class: total_increasing
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    update_interval: never
+  - platform: uptime
+    name: "Uptime"
+    entity_category: diagnostic
+
+binary_sensor:
+  - platform: template
+    id: p1_data
+    name: "P1 Data"
+    device_class: connectivity
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: version
+    name: "Firmware Version"
+    hide_timestamp: true
+    entity_category: diagnostic
+
+button:
+  - platform: restart
+    name: "Restart"
+  - platform: safe_mode
+    name: "Safe Mode"

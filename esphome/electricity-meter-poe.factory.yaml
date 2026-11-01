@@ -1,0 +1,33 @@
+# Prebuilt firmware for the Everything Smart Technology EST-PoE-32 (Ethernet).
+# Built by GitHub Actions and installed from the web installer or web.esphome.io.
+
+substitutions:
+  github_owner: mp3llll
+  github_repo: iec-p1-esphome-3phase
+  firmware_variant: poe
+
+packages:
+  core: !include electricity-meter-poe.yaml
+
+esphome:
+  project:
+    name: ${github_owner}.iec-p1-3phase
+    version: dev  # Replaced with the release version by the build workflow
+
+# Lets ESPHome Device Builder adopt the device and build it from source.
+dashboard_import:
+  package_import_url: github://${github_owner}/${github_repo}/esphome/electricity-meter-poe.yaml@main
+
+# Firmware updates from GitHub Pages, shown as the "Firmware" update entity
+# in Home Assistant (and on the device's web page).
+http_request:
+
+ota:
+  - platform: http_request
+    id: ota_http_request
+
+update:
+  - platform: http_request
+    id: update_http_request
+    name: "Firmware"
+    source: https://${github_owner}.github.io/${github_repo}/firmware/${firmware_variant}/manifest.json

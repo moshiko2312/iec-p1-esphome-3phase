@@ -1,0 +1,17 @@
+This directory is a modified copy of the captive_portal component from
+ESPHome 2026.10.1 (https://github.com/esphome/esphome).
+
+ESPHome licensing: the C++ runtime code (*.cpp, *.h) is licensed under the
+GNU General Public License v3.0; the Python code (__init__.py) is licensed
+under the MIT License. Those licenses continue to apply to these files.
+https://github.com/esphome/esphome/blob/dev/LICENSE
+
+Changes made for the IEC P1 reader:
+- __init__.py: new optional `page` setting. At build time the page
+  (default: esphome/ui/portal.html) is compressed (gzip, or brotli when
+  `compression: br` and the brotli module is available) and emitted into
+  main.cpp as INDEX_GZ / INDEX_GZ_SIZE. If portal.html is missing, the stock
+  ESPHome page (stock_portal.html, extracted from ESPHome) is used.
+- captive_index.h: holds only the declarations of INDEX_GZ / INDEX_GZ_SIZE.
+- captive_portal.cpp: uses INDEX_GZ_SIZE instead of sizeof(INDEX_GZ).
+- The /config.json and /wifisave endpoints are unchanged.

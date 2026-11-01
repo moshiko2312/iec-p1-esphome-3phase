@@ -1,0 +1,36 @@
+# Prebuilt firmware for the 30-pin ESP32 DevKit (Wi-Fi).
+# Built by GitHub Actions and installed from the web installer or web.esphome.io.
+
+substitutions:
+  github_owner: mp3llll
+  github_repo: iec-p1-esphome-3phase
+  firmware_variant: esp32
+
+packages:
+  core: !include electricity-meter-esp32.yaml
+
+esphome:
+  project:
+    name: ${github_owner}.iec-p1-3phase
+    version: dev  # Replaced with the release version by the build workflow
+
+# Lets ESPHome Device Builder adopt the device and build it from source.
+dashboard_import:
+  package_import_url: github://${github_owner}/${github_repo}/esphome/electricity-meter-esp32.yaml@main
+
+# Wi-Fi setup screen right after flashing in the browser (web installer / web.esphome.io).
+improv_serial:
+
+# Firmware updates from GitHub Pages, shown as the "Firmware" update entity
+# in Home Assistant (and on the device's web page).
+http_request:
+
+ota:
+  - platform: http_request
+    id: ota_http_request
+
+update:
+  - platform: http_request
+    id: update_http_request
+    name: "Firmware"
+    source: https://${github_owner}.github.io/${github_repo}/firmware/${firmware_variant}/manifest.json

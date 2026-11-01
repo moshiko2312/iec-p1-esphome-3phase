@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#12110f">
+<title>חיבור הקורא ל-Wi-Fi</title>
+<style>
+:root{--bg:#12110f;--panel:#1b1a16;--panel2:#24221c;--line:rgba(232,191,85,.16);--line2:rgba(232,191,85,.34);--ink:#f4eee0;--ink2:#c3b79c;--ink3:#8a7f67;--gold:#e8bf55;--grad:linear-gradient(135deg,#fff1b8 0%,#e8bf55 38%,#b8862b 62%,#f2d27a 100%);--on:#241a05;--ok:#a6d38b;--bad:#f06a5a;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;color:var(--ink);font:15px/1.5 -apple-system,"Segoe UI",Roboto,"Noto Sans Hebrew",Arial,sans-serif;background:radial-gradient(120% 60% at 50% -10%,rgba(232,191,85,.14),transparent 60%),var(--bg);-webkit-font-smoothing:antialiased}
+main{max-width:440px;margin:0 auto;padding:28px 16px 40px}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #fff3c4;outline-offset:2px}
+[hidden]{display:none!important}
+.mark{width:52px;height:52px;border-radius:16px;background:var(--grad);display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 8px 24px rgba(232,191,85,.28),inset 0 1px 0 rgba(255,255,255,.5)}
+.mark svg{width:26px;height:26px;fill:var(--on)}
+h1{margin:0;text-align:center;font-size:21px;font-weight:650;letter-spacing:-.01em}
+.sub{margin:6px 0 22px;text-align:center;color:var(--ink3);font-size:13.5px}
+.sub bdi{color:var(--ink2)}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:8px}
+.head{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 10px}
+.head b{font-size:14px;font-weight:600}
+.link{border:0;background:none;color:var(--gold);font-size:13.5px;cursor:pointer;padding:4px}
+.net{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border:1px solid transparent;border-radius:12px;background:none;text-align:start;cursor:pointer}
+.net:hover{background:rgba(232,191,85,.05)}
+.net[aria-expanded=true]{border-color:var(--line2);background:rgba(232,191,85,.07)}
+.net .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext;text-align:right}
+.bars{display:flex;align-items:flex-end;gap:2px;height:14px;flex:none;direction:ltr}
+.bars i{width:4px;border-radius:1px;background:rgba(232,191,85,.18)}
+.bars i:nth-child(1){height:4px}.bars i:nth-child(2){height:7px}.bars i:nth-child(3){height:10px}.bars i:nth-child(4){height:14px}
+.bars i.on{background:var(--gold)}
+.lock{width:14px;height:14px;fill:var(--ink3);flex:none}
+.form{padding:4px 12px 14px}
+label{display:block;font-size:13px;color:var(--ink2);margin:6px 0}
+input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.28);direction:ltr;text-align:left}
+.row{display:flex;gap:8px;margin-top:10px}
+.btn{flex:1;padding:11px 14px;border-radius:12px;border:0;background:var(--grad);color:var(--on);font-weight:650;cursor:pointer;box-shadow:0 6px 18px rgba(232,191,85,.22)}
+.btn.ghost{flex:none;background:rgba(0,0,0,.2);color:var(--ink);border:1px solid var(--line2);box-shadow:none}
+.btn[disabled]{opacity:.55;cursor:default}
+.show{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--ink3)}
+.show input{width:auto}
+.empty{padding:18px 12px;text-align:center;color:var(--ink3);font-size:13.5px}
+.err{color:var(--bad);font-size:13.5px;margin:8px 12px 0}
+.done{text-align:center;padding:22px 14px}
+.done .ok{width:48px;height:48px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:rgba(166,211,139,.14);border:1px solid rgba(166,211,139,.45)}
+.done .ok svg{width:24px;height:24px;fill:var(--ok)}
+.done h2{margin:0 0 6px;font-size:18px}
+.done p{margin:0 0 10px;color:var(--ink2);font-size:14px}
+.steps{text-align:start;margin:14px 0 0;padding:0 18px 0 0;color:var(--ink2);font-size:14px}
+.steps li{margin:6px 0}
+.addr{display:inline-block;margin-top:4px;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--line2);color:#fff3c4;direction:ltr;font-weight:600}
+.foot{margin-top:16px;text-align:center;font-size:12.5px;color:var(--ink3);direction:ltr}
+</style>
+</head>
+<body>
+<main>
+  <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13.5 2 4 13.5h6.2L9 22l9.5-12h-6.3z"/></svg></div>
+  <h1>חיבור הקורא ל-Wi-Fi</h1>
+  <p class="sub">בחר את רשת הבית. אחרי החיבור, הקורא יופיע ב-Home Assistant לבד.</p>
+
+  <section class="card" id="pick">
+    <div class="head"><b>רשתות בסביבה</b><button class="link" id="rescan" type="button">רענון</button></div>
+    <div id="list" role="list"><p class="empty">מחפש רשתות…</p></div>
+    <button class="net" id="other" type="button" aria-expanded="false"><span class="n">רשת אחרת או מוסתרת</span></button>
+    <div class="form" id="form" hidden>
+      <div id="ssidrow" hidden><label for="ssid">שם הרשת</label><input id="ssid" autocomplete="off" autocapitalize="none" spellcheck="false"></div>
+      <label for="psk" id="psklabel">סיסמת הרשת</label>
+      <input id="psk" type="password" autocomplete="current-password">
+      <label class="show"><input type="checkbox" id="showpsk">הצגת הסיסמה</label>
+      <div class="row"><button class="btn" id="save" type="button">התחברות</button><button class="btn ghost" id="cancel" type="button">ביטול</button></div>
+      <p class="err" id="err" hidden></p>
+    </div>
+  </section>
+
+  <section class="card done" id="done" hidden>
+    <div class="ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.5 16.6 4.9 12l-1.4 1.4 6 6 11-11-1.4-1.4z"/></svg></div>
+    <h2>הקורא מתחבר ל-<bdi id="donessid"></bdi></h2>
+    <p>הנקודה החמה של הקורא תיסגר בעוד כמה שניות.</p>
+    <ol class="steps">
+      <li>חבר את הטלפון חזרה לרשת הבית.</li>
+      <li>פתח את ממשק הקורא:<br><span class="addr" id="addr"></span></li>
+      <li>ב-Home Assistant תופיע הודעה שנמצא מכשיר חדש. לחץ "הגדרה".</li>
+    </ol>
+    <p style="margin-top:14px">אם הנקודה החמה חוזרת אחרי דקה, הסיסמה כנראה שגויה. התחבר אליה שוב ונסה שנית.</p>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var chosen = null, name = "";
+  var LOCK = '<svg class="lock" viewBox="0 0 24 24" aria-label="מוגנת בסיסמה"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 1 1 6 0v3z"/></svg>';
+
+  function bars(rssi) {
+    var n = rssi > -55 ? 4 : rssi > -65 ? 3 : rssi > -75 ? 2 : 1, s = '<span class="bars" aria-hidden="true">';
+    for (var i = 1; i <= 4; i++) s += '<i' + (i <= n ? ' class="on"' : '') + '></i>';
+    return s + '</span>';
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  function load() {
+    fetch("/config.json", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
+      name = d.name || "";
+      $("foot").textContent = (name ? name + "  " : "") + (d.mac || "");
+      var seen = {}, aps = (d.aps || []).filter(function (a) {
+        if (!a.ssid || seen[a.ssid]) return false;
+        seen[a.ssid] = 1; return true;
+      }).sort(function (a, b) { return b.rssi - a.rssi; });
+      var list = $("list");
+      if (!aps.length) { list.innerHTML = '<p class="empty">עוד לא נמצאו רשתות. לחץ רענון בעוד כמה שניות.</p>'; return; }
+      list.innerHTML = aps.map(function (a, i) {
+        return '<button class="net" type="button" role="listitem" aria-expanded="false" data-i="' + i + '">' + bars(a.rssi) +
+          '<span class="n">' + esc(a.ssid) + '</span>' + (a.lock ? LOCK : '') + '</button>';
+      }).join("");
+      [].forEach.call(list.querySelectorAll(".net"), function (b) {
+        b.onclick = function () { open(b, aps[+b.dataset.i]); };
+      });
+    }).catch(function () {
+      $("list").innerHTML = '<p class="empty">לא הצלחתי לקרוא את רשימת הרשתות. לחץ רענון.</p>';
+    });
+  }
+
+  function open(btn, ap) {
+    [].forEach.call(document.querySelectorAll(".net"), function (b) { b.setAttribute("aria-expanded", "false"); });
+    btn.setAttribute("aria-expanded", "true");
+    chosen = ap;
+    var form = $("form");
+    btn.insertAdjacentElement("afterend", form);
+    form.hidden = false;
+    $("ssidrow").hidden = !!ap;
+    var needPsk = !ap || ap.lock;
+    $("psk").hidden = $("psklabel").hidden = !needPsk;
+    $("psk").parentNode.querySelector(".show").hidden = !needPsk;
+    $("psk").value = "";
+    $("err").hidden = true;
+    (ap ? (needPsk ? $("psk") : $("save")) : $("ssid")).focus();
+  }
+
+  $("other").onclick = function () { open($("other"), null); };
+  $("cancel").onclick = function () {
+    $("form").hidden = true;
+    [].forEach.call(document.querySelectorAll(".net"), function (b) { b.setAttribute("aria-expanded", "false"); });
+  };
+  $("showpsk").onchange = function () { $("psk").type = this.checked ? "text" : "password"; };
+  $("rescan").onclick = function () { $("list").innerHTML = '<p class="empty">מחפש רשתות…</p>'; setTimeout(load, 600); };
+  $("psk").onkeydown = $("ssid").onkeydown = function (e) { if (e.key === "Enter") $("save").click(); };
+
+  $("save").onclick = function () {
+    var ssid = chosen ? chosen.ssid : $("ssid").value.trim();
+    var psk = $("psk").hidden ? "" : $("psk").value;
+    var err = $("err");
+    if (!ssid) { err.textContent = "צריך שם רשת."; err.hidden = false; return; }
+    if (psk && psk.length < 8) { err.textContent = "סיסמת Wi-Fi היא לפחות 8 תווים."; err.hidden = false; return; }
+    this.disabled = true;
+    this.textContent = "שומר…";
+    var btn = this;
+    fetch("/wifisave?ssid=" + encodeURIComponent(ssid) + "&psk=" + encodeURIComponent(psk), { method: "POST" })
+      .then(function (r) { if (!r.ok) throw 0; })
+      .then(function () {
+        $("pick").hidden = true;
+        $("done").hidden = false;
+        $("donessid").textContent = ssid;
+        $("addr").textContent = "http://" + (name || "electricity-meter") + ".local";
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = "התחברות";
+        err.textContent = "השמירה לא הצליחה. ודא שאתה עדיין מחובר לנקודה החמה של הקורא.";
+        err.hidden = false;
+      });
+  };
+
+  load();
+  setInterval(function () { if (!$("pick").hidden && $("form").hidden) load(); }, 15000);
+})();
+</script>
+</body>
+</html>

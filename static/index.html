@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#12110f">
+<title>צריבת קורא המונה</title>
+<meta name="description" content="צריבת הקושחה לקורא P1 של מונה תלת-פאזי של חברת החשמל, ישר מהדפדפן.">
+<script type="module" src="https://cdn.jsdelivr.net/npm/esp-web-tools@10.4.0/dist/web/install-button.js"></script>
+<style>
+:root {
+  --bg: #12110f;
+  --panel: #1b1a16;
+  --panel-2: #24221c;
+  --line: rgba(232, 191, 85, 0.16);
+  --line-2: rgba(232, 191, 85, 0.34);
+  --ink: #f4eee0;
+  --ink-2: #c3b79c;
+  --ink-3: #8a7f67;
+  --gold: #e8bf55;
+  --grad: linear-gradient(135deg, #fff1b8 0%, #e8bf55 38%, #b8862b 62%, #f2d27a 100%);
+  --on-gold: #241a05;
+  --warn: #f0a24a;
+  color-scheme: dark;
+
+  /* ESP Web Tools dialogs (Material 3) in the same gold */
+  --md-sys-color-primary: #e8bf55;
+  --md-sys-color-on-primary: #241a05;
+  --md-sys-color-surface: #1b1a16;
+  --md-sys-color-surface-container: #1b1a16;
+  --md-sys-color-surface-container-high: #24221c;
+  --md-sys-color-surface-container-highest: #2c2a23;
+  --md-sys-color-on-surface: #f4eee0;
+  --md-sys-color-on-surface-variant: #c3b79c;
+  --md-sys-color-outline: rgba(232, 191, 85, 0.4);
+  --md-sys-color-error: #f06a5a;
+  --md-ref-typeface-plain: -apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", Arial, sans-serif;
+  --md-ref-typeface-brand: -apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  font: 16px/1.6 -apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", Arial, sans-serif;
+  background: radial-gradient(120% 50% at 50% -10%, rgba(232, 191, 85, 0.15), transparent 60%), var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+main { max-width: 680px; margin: 0 auto; padding: 40px 16px 64px; }
+a { color: var(--gold); }
+:focus-visible { outline: 2px solid #fff3c4; outline-offset: 2px; }
+
+header { text-align: center; margin-bottom: 30px; }
+.mark { width: 60px; height: 60px; border-radius: 18px; margin: 0 auto 18px; display: grid; place-items: center; background: var(--grad); box-shadow: 0 10px 30px rgba(232, 191, 85, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.5); }
+.mark svg { width: 30px; height: 30px; fill: var(--on-gold); }
+h1 { margin: 0; font-size: clamp(26px, 6vw, 34px); line-height: 1.2; letter-spacing: -0.02em; font-weight: 700; }
+.lede { margin: 10px auto 0; max-width: 34em; color: var(--ink-2); }
+
+.panel { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin-bottom: 14px; }
+h2 { margin: 0 0 12px; font-size: 18px; font-weight: 650; }
+
+.boards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.board { position: relative; display: block; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.2); cursor: pointer; }
+.board input { position: absolute; opacity: 0; }
+.board b { display: block; font-size: 15px; }
+.board span { font-size: 13.5px; color: var(--ink-3); }
+.board:has(input:checked) { border-color: var(--gold); background: rgba(232, 191, 85, 0.09); }
+.board:has(input:focus-visible) { outline: 2px solid #fff3c4; outline-offset: 2px; }
+
+.warn { display: flex; gap: 10px; margin: 16px 0; padding: 12px 14px; border-radius: 12px; background: rgba(240, 162, 74, 0.1); border: 1px solid rgba(240, 162, 74, 0.4); color: #ffd9ad; font-size: 14.5px; }
+.warn svg { width: 20px; height: 20px; flex: none; fill: var(--warn); margin-top: 2px; }
+
+.install { display: flex; justify-content: center; margin-top: 6px; }
+.go { padding: 14px 30px; border: 0; border-radius: 14px; background: var(--grad); color: var(--on-gold); font: inherit; font-weight: 700; font-size: 17px; cursor: pointer; box-shadow: 0 10px 26px rgba(232, 191, 85, 0.3); }
+.nope { text-align: center; color: var(--ink-2); font-size: 14.5px; }
+/* until ESP Web Tools loads, show only our button */
+esp-web-install-button:not(:defined) [slot="unsupported"],
+esp-web-install-button:not(:defined) [slot="not-allowed"] { display: none; }
+.nb { white-space: nowrap; }
+
+ol.steps { margin: 0; padding: 0 22px 0 0; color: var(--ink-2); }
+ol.steps li { margin: 0 0 10px; padding-inline-start: 4px; }
+ol.steps b { color: var(--ink); }
+code, .addr { white-space: nowrap; direction: ltr; unicode-bidi: isolate; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; color: #fff3c4; }
+
+.files { display: grid; gap: 8px; }
+.file { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.2); text-decoration: none; color: var(--ink); }
+.file span { color: var(--ink-3); font-size: 13.5px; }
+.file bdi { direction: ltr; }
+.muted { color: var(--ink-3); font-size: 14px; }
+footer { margin-top: 26px; text-align: center; color: var(--ink-3); font-size: 13.5px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13.5 2 4 13.5h6.2L9 22l9.5-12h-6.3z"/></svg></div>
+    <h1>צריבת קורא המונה</h1>
+    <p class="lede">קושחה מוכנה לקורא P1 של מונה תלת-פאזי של חברת החשמל. מחברים את הלוח למחשב, לוחצים על צריבה, ובוחרים רשת Wi-Fi. לא צריך להתקין שום תוכנה.</p>
+  </header>
+
+  <section class="panel">
+    <h2>איזה לוח יש לך?</h2>
+    <div class="boards" role="radiogroup" aria-label="סוג הלוח">
+      <label class="board"><input type="radio" name="board" value="esp32" checked><b>ESP32 עם Wi-Fi</b><span>לוח 30 פינים, מקבל מתח מהמונה</span></label>
+      <label class="board"><input type="radio" name="board" value="poe"><b>לוח PoE</b><span>של Everything Smart Home, כבל רשת אחד למתח ולתקשורת</span></label>
+    </div>
+
+    <div class="warn" role="note">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 21h22L12 2zm12-3h-2v-2h2zm0-4h-2v-4h2z"/></svg>
+      <div>נתק את הלוח מהמונה לפני שמחברים אותו למחשב. אסור לחבר USB ומונה באותו זמן.</div>
+    </div>
+
+    <div class="install">
+      <esp-web-install-button id="installer" manifest="firmware/esp32/manifest.json">
+        <button slot="activate" class="go">צריבה ללוח</button>
+        <p slot="unsupported" class="nope">הדפדפן הזה לא יכול לצרוב. פתח את הדף ב-Chrome או ב-Edge במחשב.</p>
+        <p slot="not-allowed" class="nope">צריבה עובדת רק בדף מאובטח (https).</p>
+      </esp-web-install-button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>מה קורה אחרי הצריבה</h2>
+    <ol class="steps" id="after-esp32">
+      <li>בסוף הצריבה הדפדפן מציע <b class="nb">חיבור ל-Wi&#8209;Fi</b>. בחר את רשת הבית והזן סיסמה.</li>
+      <li>דילגת? הקורא פותח נקודה חמה בשם <code>electricity-meter</code>. התחבר אליה מהטלפון ודף החיבור ייפתח לבד.</li>
+      <li>נתק את ה-USB, החזר את הקורא למונה, ופתח <span class="addr">http://electricity-meter.local</span> כדי לבחור מסלול, תעריף וגודל מפסק.</li>
+      <li>ב-Home Assistant תופיע הודעה שנמצא מכשיר חדש. לחיצה על "הגדרה" וזהו, כל הנתונים והעלויות כבר שם.</li>
+    </ol>
+    <ol class="steps" id="after-poe" hidden>
+      <li>נתק את ה-USB וחבר את הלוח בכבל רשת למתג עם PoE.</li>
+      <li>הקורא מקבל כתובת אוטומטית מהראוטר. פתח <span class="addr">http://electricity-meter.local</span> כדי לבחור מסלול, תעריף וגודל מפסק.</li>
+      <li>ב-Home Assistant תופיע הודעה שנמצא מכשיר חדש. לחיצה על "הגדרה" וזהו.</li>
+    </ol>
+  </section>
+
+  <section class="panel">
+    <h2>קבצים להורדה</h2>
+    <p class="muted">לצריבה ידנית ב-<a href="https://web.esphome.io" rel="noopener">web.esphome.io</a> בוחרים את קובץ ה-factory. לעדכון דרך ממשק הקורא מעלים את קובץ ה-ota.</p>
+    <div class="files" id="files"><p class="muted">טוען…</p></div>
+  </section>
+
+  <footer>
+    <a href="https://github.com/mp3llll/iec-p1-esphome-3phase">הקוד ב-GitHub</a>. לשימוש על אחריותך. אין קשר לחברת החשמל או ל-Kaifa.
+  </footer>
+</main>
+<script>
+  const installer = document.getElementById("installer");
+  const files = document.getElementById("files");
+  const label = { esp32: "ESP32 עם Wi-Fi", poe: "לוח PoE" };
+
+  async function showFiles(board) {
+    const base = `firmware/${board}/`;
+    try {
+      const m = await (await fetch(base + "manifest.json", { cache: "no-store" })).json();
+      const b = (m.builds || [])[0] || {};
+      const rows = [];
+      if (b.parts && b.parts[0]) rows.push([b.parts[0].path, "factory, לצריבה ראשונה"]);
+      if (b.ota && b.ota.path) rows.push([b.ota.path, "ota, לעדכון"]);
+      files.innerHTML = rows.map(([p, what]) =>
+        `<a class="file" href="${base}${p}" download><bdi>${p.split("/").pop()}</bdi><span>${what}</span></a>`).join("") +
+        `<p class="muted">גרסה ${m.version || "—"} עבור ${label[board]}.</p>`;
+    } catch (_) {
+      files.innerHTML = `<p class="muted">עוד לא פורסמה גרסה ל${label[board]}.</p>`;
+    }
+  }
+
+  document.querySelectorAll('input[name="board"]').forEach((r) => r.addEventListener("change", () => {
+    if (!r.checked) return;
+    installer.setAttribute("manifest", `firmware/${r.value}/manifest.json`);
+    document.getElementById("after-esp32").hidden = r.value !== "esp32";
+    document.getElementById("after-poe").hidden = r.value !== "poe";
+    showFiles(r.value);
+  }));
+  showFiles("esp32");
+</script>
+</body>
+</html>

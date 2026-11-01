@@ -1,0 +1,317 @@
+# On-device cost engine: settings, local time, and the cost/forecast sensors.
+# The logic lives in iec_p1.h (unit-tested in tests/test_engine.cpp); the
+# lambdas here only feed it readings and publish its results.
+
+esphome:
+  includes:
+    - iec_p1.h
+  on_boot:
+    # Load the saved statistics before the first reading arrives.
+    - priority: 800
+      then:
+        - lambda: iecp1::engine().load();
+
+# Statistics are queued on every change and written to flash at most this often.
+preferences:
+  flash_write_interval: 5min
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Asia/Jerusalem
+    on_time_sync:
+      - script.execute: minute_tick
+    on_time:
+      - seconds: 0
+        then:
+          - script.execute: minute_tick
+
+# ---------------------------------------------------------------------------
+# Settings. Saved on the device, editable from the web page and Home Assistant.
+# ---------------------------------------------------------------------------
+number:
+  - platform: template
+    id: base_price
+    name: "Base Price"
+    icon: mdi:cash
+    entity_category: config
+    unit_of_measurement: ILS/kWh
+    mode: box
+    min_value: 0
+    max_value: 3
+    step: 0.0001
+    # IEC domestic rate from 1.7.2026: 53.83 agorot + 18% VAT
+    initial_value: 0.6352
+    optimistic: true
+    restore_value: true
+    on_value:
+      - script.execute: update_price
+  - platform: template
+    id: fixed_charge
+    name: "Fixed Charge"
+    icon: mdi:cash-lock
+    entity_category: config
+    unit_of_measurement: ILS/month
+    mode: box
+    min_value: 0
+    max_value: 1000
+    step: 0.01
+    # Three-phase meter from 1.7.2026, incl. VAT (distribution 13.64 + supply 18.33)
+    initial_value: 31.97
+    optimistic: true
+    restore_value: true
+    on_value:
+      - script.execute: publish_daily
+  - platform: template
+    id: breaker_size
+    name: "Breaker Size"
+    icon: mdi:electric-switch
+    entity_category: config
+    unit_of_measurement: A
+    mode: box
+    min_value: 6
+    max_value: 125
+    step: 1
+    initial_value: 25
+    optimistic: true
+    restore_value: true
+  - platform: template
+    id: custom_discount
+    name: "Custom Discount"
+    icon: mdi:sale
+    entity_category: config
+    unit_of_measurement: "%"
+    mode: box
+    min_value: 0
+    max_value: 100
+    step: 0.5
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    on_value:
+      - script.execute: update_price
+  - platform: template
+    id: custom_window_start
+    name: "Custom Window Start"
+    icon: mdi:clock-start
+    entity_category: config
+    unit_of_measurement: h
+    mode: box
+    min_value: 0
+    max_value: 23
+    step: 1
+    initial_value: 23
+    optimistic: true
+    restore_value: true
+    on_value:
+      - script.execute: update_price
+  - platform: template
+    id: custom_window_end
+    name: "Custom Window End"
+    icon: mdi:clock-end
+    entity_category: config
+    unit_of_measurement: h
+    mode: box
+    min_value: 0
+    max_value: 23
+    step: 1
+    initial_value: 7
+    optimistic: true
+    restore_value: true
+    on_value:
+      - script.execute: update_price
+  - platform: template
+    id: custom_window_discount
+    name: "Custom Window Discount"
+    icon: mdi:sale
+    entity_category: config
+    unit_of_measurement: "%"
+    mode: box
+    min_value: 0
+    max_value: 100
+    step: 0.5
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    on_value:
+      - script.execute: update_price
+
+switch:
+  - platform: template
+    id: custom_window_sun_thu
+    name: "Custom Window Sun-Thu Only"
+    icon: mdi:calendar-week
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_on:
+      - script.execute: update_price
+    on_turn_off:
+      - script.execute: update_price
+
+button:
+  - platform: template
+    name: "Reset Statistics"
+    icon: mdi:restore
+    entity_category: config
+    on_press:
+      - lambda: |-
+          iecp1::engine().reset_statistics(iecp1::to_local(id(sntp_time).now()));
+          iecp1::engine().save();
+      - script.execute: publish_energy
+      - script.execute: publish_live
+      - script.execute: publish_daily
+
+# ---------------------------------------------------------------------------
+# Engine inputs (called from the meter sensors in p1.yaml) and outputs
+# ---------------------------------------------------------------------------
+script:
+  - id: on_energy_total
+    parameters:
+      kwh: float
+    then:
+      - lambda: iecp1::engine().on_energy(kwh, iecp1::to_local(id(sntp_time).now()));
+      - script.execute: publish_energy
+
+  - id: on_power
+    parameters:
+      kw: float
+    then:
+      - lambda: iecp1::engine().on_power(kw, iecp1::to_local(id(sntp_time).now()));
+      - script.execute: publish_live
+
+  - id: minute_tick
+    then:
+      - lambda: |-
+          auto &e = iecp1::engine();
+          if (e.check_rollover(iecp1::to_local(id(sntp_time).now()))) {
+            e.save();
+            global_preferences->sync();  // keep the day change even after a power cut
+          }
+          e.minute_tick(iecp1::to_local(id(sntp_time).now()));
+          e.save();
+      - script.execute: update_price
+      - script.execute: publish_energy
+      - script.execute: publish_daily
+
+  - id: publish_energy
+    then:
+      - lambda: |-
+          const auto &e = iecp1::engine();
+          const auto t = iecp1::to_local(id(sntp_time).now());
+          id(energy_today).publish_state(e.energy_today());
+          id(energy_month).publish_state(e.energy_month());
+          id(cost_today).publish_state(e.cost_today());
+          id(cost_month).publish_state(e.cost_month());
+          id(cost_total).publish_state(e.cost_total());
+          id(yesterday_so_far).publish_state(e.yesterday_so_far(t));
+          id(compared_to_yesterday).publish_state(e.compared_to_yesterday(t));
+
+  - id: publish_live
+    then:
+      - lambda: |-
+          const auto &e = iecp1::engine();
+          id(cost_now).publish_state(e.cost_now());
+          const float peak = e.peak_kw();
+          if (std::isnan(peak) || id(peak_today).state != peak) {
+            id(peak_today).publish_state(peak);
+            const std::string when = e.peak_time();
+            if (id(peak_time).state != when)
+              id(peak_time).publish_state(when);
+          }
+
+  - id: publish_daily
+    then:
+      - lambda: |-
+          const auto &e = iecp1::engine();
+          const auto t = iecp1::to_local(id(sntp_time).now());
+          id(forecast_month).publish_state(e.forecast_month(t, id(fixed_charge).state));
+          id(baseload).publish_state(e.baseload(t));
+          id(baseload_cost).publish_state(e.baseload_cost(t, id(base_price).state));
+
+# ---------------------------------------------------------------------------
+# Results
+# ---------------------------------------------------------------------------
+.cost_templates:
+  kwh: &kwh
+    platform: template
+    unit_of_measurement: kWh
+    device_class: energy
+    accuracy_decimals: 3
+    update_interval: never
+  ils: &ils
+    platform: template
+    unit_of_measurement: ILS
+    device_class: monetary
+    accuracy_decimals: 2
+    update_interval: never
+
+sensor:
+  - {<<: *kwh, id: energy_today, name: "Energy Today", state_class: total_increasing}
+  - {<<: *kwh, id: energy_month, name: "Energy Month", state_class: total_increasing}
+  - {<<: *kwh, id: yesterday_so_far, name: "Energy Yesterday So Far"}
+  - {<<: *ils, id: cost_today, name: "Cost Today"}
+  - {<<: *ils, id: cost_month, name: "Cost Month"}
+  - {<<: *ils, id: forecast_month, name: "Forecast Month", icon: mdi:crystal-ball}
+  - {<<: *ils, id: baseload_cost, name: "Baseload Cost", icon: mdi:weather-night}
+  # Never resets (not even with Reset Statistics): use it as the cost source
+  # in the Home Assistant Energy dashboard.
+  - {<<: *ils, id: cost_total, name: "Cost Total", state_class: total}
+  - platform: template
+    id: cost_now
+    name: "Cost Now"
+    icon: mdi:cash-fast
+    unit_of_measurement: ILS/h
+    state_class: measurement
+    accuracy_decimals: 2
+    update_interval: never
+  - platform: template
+    id: compared_to_yesterday
+    name: "Compared To Yesterday"
+    icon: mdi:compare-horizontal
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: never
+  - platform: template
+    id: peak_today
+    name: "Peak Today"
+    icon: mdi:chart-bell-curve
+    unit_of_measurement: kW
+    device_class: power
+    accuracy_decimals: 3
+    update_interval: never
+  - platform: template
+    id: baseload
+    name: "Baseload"
+    icon: mdi:power-sleep
+    unit_of_measurement: kW
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 3
+    update_interval: never
+  - platform: template
+    id: price_sensor
+    name: "Price"
+    icon: mdi:cash
+    unit_of_measurement: ILS/kWh
+    accuracy_decimals: 4
+    update_interval: never
+  - platform: template
+    id: discount_sensor
+    name: "Discount"
+    icon: mdi:sale
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    update_interval: never
+
+text_sensor:
+  - platform: template
+    id: peak_time
+    name: "Peak Time"
+    icon: mdi:clock-outline
+    update_interval: never
+  - platform: template
+    id: discount_window
+    name: "Discount Window"
+    icon: mdi:clock-time-four-outline
+    update_interval: never
