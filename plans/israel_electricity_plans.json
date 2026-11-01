@@ -1,0 +1,959 @@
+{
+  "verified_on": "2026-11-01",
+  "schema_notes": {
+    "days": "sun..sat. Israeli weekdays are Sun-Thu ('א'-ה'').",
+    "windows": "[] means all hours on all days. A window whose 'to' is earlier than its 'from' crosses midnight and is anchored to the day it STARTS (e.g. sun-thu 23:00-07:00 = Sun 23:00 to Mon 07:00 ... Thu 23:00 to Fri 07:00). '24:00' means end of day. No supplier states clearly whether Fri 00:00-07:00 or Sun 00:00-07:00 counts.",
+    "discount_pct": "Percent off the kWh (consumption/energy) charge only. Fixed charges (distribution, supply, kVA capacity) are never discounted.",
+    "excludes_holidays": "true = the plan excludes holidays and holiday eves explicitly; null = the supplier does not say.",
+    "secondary_only": "true = figures come from comparison sites quoting the supplier, because the supplier site/PDF could not be fetched (JS-only or robots-blocked).",
+    "status": "current | unverified_current (supplier document exists or was reported, but it is missing from the October 2026 comparison lists)"
+  },
+  "regular_price_agorot_incl_vat": 63.52,
+  "regular_price_agorot_excl_vat": 53.83,
+  "vat_pct": 18,
+  "regular_price_effective_from": "2026-07-01",
+  "regular_price_next_update": "2027-01-01 expected (tariffs update every Jan 1 and Jul 1 per Electricity Authority decision 78206)",
+  "fixed_charge": {
+    "unit": "ILS per month (a bi-monthly IEC bill shows about 2x)",
+    "effective_from": "2026-07-01",
+    "single_phase": {
+      "distribution_excl_vat": 9.97,
+      "supply_excl_vat": 15.6,
+      "total_excl_vat": 25.57,
+      "total_incl_vat": 30.17
+    },
+    "three_phase_below_3x100A": {
+      "distribution_excl_vat": 11.56,
+      "supply_excl_vat": 15.53,
+      "total_excl_vat": 27.09,
+      "total_incl_vat": 31.97
+    },
+    "capacity_kva": {
+      "ils_per_kva_per_year_excl_vat": 6.18,
+      "ils_per_kva_per_year_incl_vat": 7.29,
+      "note": "Connection size (kVA) x rate / 12, prorated by days in the month. No supplier discounts it."
+    },
+    "source": "https://www.bezeq.co.il/media/PDF/energy/tarifim.pdf",
+    "cross_check": "https://www.supermarker.themarker.com/bills/guides/electricity-tariff-2026"
+  },
+  "price_source": "https://www.bezeq.co.il/media/PDF/energy/tarifim.pdf",
+  "price_source_notes": "Bezeq Energy's tariff appendix 'נכון ליום 01/07/2026' reproduces the Electricity Authority tariffs (53.83 ag/kWh excl. VAT). Incl.-VAT figures calculated at 18%. The Authority's own tariff book (https://www.gov.il/BlobFolder/generalpage/tarriffbook/he/sefer_tariff_07_2026.pdf) exists, but its tables could not be extracted. Supermarker (2026-09-30) shows the same figures.",
+  "tou_tariff": {
+    "name_he": "תעו\"ז מתח נמוך (תעריף עומס וזמן) – וולונטרי לצרכן ביתי",
+    "household_specific": false,
+    "applicability": "No separate household TOU product exists. Households may opt in to the low-voltage TOU tariff (TOU meter required). It is mandatory for connections of 3x200A and up and for customers who used over 40,000 kWh in the previous calendar year. Minimum stay 1 year. Joining or leaving costs 105.02 ILS incl. VAT in some meter setups (per Supermarker, citing the IEC voluntary TOU page). Private-supplier windowed plans are generally NOT available to TOU customers.",
+    "effective_from": "2026-07-01",
+    "seasons": {
+      "winter": [
+        12,
+        1,
+        2
+      ],
+      "transition": [
+        3,
+        4,
+        5,
+        10,
+        11
+      ],
+      "summer": [
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "peak_windows": {
+      "winter": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu",
+            "fri",
+            "sat"
+          ],
+          "from": "17:00",
+          "to": "22:00"
+        }
+      ],
+      "transition": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "17:00",
+          "to": "22:00"
+        }
+      ],
+      "summer": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "17:00",
+          "to": "23:00"
+        }
+      ]
+    },
+    "off_peak": "All other hours, including all of Fri/Sat in transition and summer.",
+    "holiday_rule": "Holiday eves are treated like Friday and holidays like Saturday (the tariff-book block table pairs 'ו/ערב חג' and 'שבת/חג').",
+    "prices_agorot_excl_vat": {
+      "winter": {
+        "off_peak": 39.52,
+        "peak": 97.2
+      },
+      "transition": {
+        "off_peak": 38.8,
+        "peak": 42.02
+      },
+      "summer": {
+        "off_peak": 42.73,
+        "peak": 145.96
+      }
+    },
+    "prices_agorot_incl_vat": {
+      "winter": {
+        "off_peak": 46.63,
+        "peak": 114.7
+      },
+      "transition": {
+        "off_peak": 45.78,
+        "peak": 49.58
+      },
+      "summer": {
+        "off_peak": 50.42,
+        "peak": 172.23
+      }
+    },
+    "fixed_charge_monthly": {
+      "distribution_excl_vat": 32.1,
+      "supply_excl_vat": 15.53,
+      "total_incl_vat": 56.21,
+      "applies_to": "low voltage, connection below 3x100A, bi-monthly reading"
+    },
+    "capacity_kva_ils_per_year_excl_vat": 6.18,
+    "sources": {
+      "prices_and_fixed": "https://www.bezeq.co.il/media/PDF/energy/tarifim.pdf",
+      "seasons_and_hours_primary": "https://www.gov.il/BlobFolder/policy/63609/he/Files_Hachlatot_63609.pdf",
+      "seasons_and_hours_secondary": "https://www.supermarker.themarker.com/bills/guides/time-of-use-electricity-tariff",
+      "tariff_book": "https://www.gov.il/BlobFolder/generalpage/tarriffbook/he/sefer_tariff_07_2026.pdf"
+    },
+    "notes": "Hour blocks come from Electricity Authority decision 63609 (2022-07-27, in force since the 2023 annual update). That decision's table lists a separate winter Friday peak (16:00-21:00), but its text says it was merged into 17:00-22:00, and it gives no winter Saturday hours. Supermarker (citing tariff book table 5.1-1) and water-energy.co.il say winter peak is 17:00-22:00 on all days, which is used here."
+  },
+  "plans": [
+    {
+      "id": "superpower_power",
+      "provider_he": "סופר פאוור (לשעבר אלקטרה פאוור / סופרגז פאוור)",
+      "provider_en": "Super Power (formerly Electra Power)",
+      "plan_he": "POWER",
+      "plan_en": "POWER fixed 24/7",
+      "discount_pct": 6.5,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "All hours, all days, any meter type. Discount on kWh consumption only. Customers entitled to the IEC social discount use it first on the first 400 kWh/month; the plan discount applies to consumption above that. Plan change free, once a month (self-service). Exit takes effect from the start of the next month. Per Supermarker, the 05/2026 sales agreement lets the company add an operating fee to the fixed charge (amount not published, 30 days' notice).",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://super-power.co.il/",
+      "source_date": "2026-10-26",
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/super-power/super-power-power-182",
+        "https://www.kamazeole.co.il/packages/electric/company/67/supergas-energy"
+      ]
+    },
+    {
+      "id": "superpower_day",
+      "provider_he": "סופר פאוור (לשעבר אלקטרה פאוור / סופרגז פאוור)",
+      "provider_en": "Super Power (formerly Electra Power)",
+      "plan_he": "מסלול יום",
+      "plan_en": "Day",
+      "discount_pct": 21,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "07:00",
+          "to": "17:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "Sun-Thu 07:00-17:00 only; outside the window and on the weekend the full tariff applies. Smart meter only (installation through IEC, about 260 ILS one-time per the supplier). Consumption component only. Same social-discount rule as POWER. Holidays not addressed.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://super-power.co.il/",
+      "source_date": "2026-10-26",
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/super-power/super-power-day-180"
+      ]
+    },
+    {
+      "id": "superpower_night_plus",
+      "provider_he": "סופר פאוור (לשעבר אלקטרה פאוור / סופרגז פאוור)",
+      "provider_en": "Super Power (formerly Electra Power)",
+      "plan_he": "לילה פלוס",
+      "plan_en": "Night Plus",
+      "discount_pct": 21,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "23:00",
+          "to": "07:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "Supplier text: 23:00 until 07:00 the next morning, on Sun-Thu. Smart meter only. Consumption component only. Whether Fri 00:00-07:00 (after Thu night) counts is not stated. Holidays not addressed.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://super-power.co.il/",
+      "source_date": "2026-10-26",
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/super-power/super-power-night-plus-181"
+      ]
+    },
+    {
+      "id": "superpower_10x10",
+      "provider_he": "סופר פאוור (לשעבר אלקטרה פאוור / סופרגז פאוור)",
+      "provider_en": "Super Power (formerly Electra Power)",
+      "plan_he": "10X10",
+      "plan_en": "10X10",
+      "discount_pct": 10,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "10:00",
+          "to": "22:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "Sun-Thu 10:00-22:00. Smart meter only. Consumption component only. Kamazeole (secondary) lists it as 'for customers who join on the website'. Holidays not addressed.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://super-power.co.il/",
+      "source_date": "2026-10-26",
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/super-power/super-power-10x10-179"
+      ]
+    },
+    {
+      "id": "cellcom_day",
+      "provider_he": "סלקום אנרג'י",
+      "provider_en": "Cellcom Energy",
+      "plan_he": "חסכון ביום",
+      "plan_en": "Day saving",
+      "discount_pct": 20,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "07:00",
+          "to": "17:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "20% off the uniform residential tariff, 07:00-17:00, Sun-Thu ('בימים א'-ה''). Needs a continuous meter with at least half-hourly data (smart meter). A billing cycle with no continuous reading gets no discount. Residential customers only. Plan switch through a representative costs 19.90 ILS one-time. Cellcom may change the discount with prior notice. Fixed, distribution/supply and kVA charges are billed in full.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://contentepi.cellcom.co.il/globalassets/pdf/7/-/ab2f-----.pdf",
+      "source_date": null,
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/cellcom-energy/cellcom-energy-day-165"
+      ],
+      "source_date_note": "No date printed. Document code 18819-0426-01 may mean 04/2026 (inferred). Supermarker checked it on 2026-10-02."
+    },
+    {
+      "id": "cellcom_family",
+      "provider_he": "סלקום אנרג'י",
+      "provider_en": "Cellcom Energy",
+      "plan_he": "חסכון למשפחות",
+      "plan_en": "Family saving",
+      "discount_pct": 18,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "14:00",
+          "to": "20:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "18% on Sun-Thu 14:00-20:00; other hours and the weekend at full tariff. Smart (continuous half-hourly) meter. Residential uniform tariff only. 19.90 ILS plan-switch fee through a representative.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://contentepi.cellcom.co.il/globalassets/pdf/7/-/------_18289-a9et.pdf",
+      "source_date": null,
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/cellcom-energy/cellcom-energy-family-166"
+      ],
+      "source_date_note": "Text layer of the PDF is garbled. 18%, 14:00, 20:00 and 19.90 are legible, and the Sun-Thu wording is quoted by Supermarker (checked 2026-10-02). Document code 18289-0225-01 may mean 02/2025 (inferred)."
+    },
+    {
+      "id": "cellcom_night",
+      "provider_he": "סלקום אנרג'י",
+      "provider_en": "Cellcom Energy",
+      "plan_he": "חסכון בלילה",
+      "plan_en": "Night saving",
+      "discount_pct": 15,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu",
+            "fri",
+            "sat"
+          ],
+          "from": "23:00",
+          "to": "07:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "15% between 23:00 and 07:00 the next day. The agreement PDF does not limit the days. Cellcom marketing (quoted by Supermarker, Kamazeole and Shtipser) says it covers every day including the weekend. Smart (continuous half-hourly) meter. 19.90 ILS plan-switch fee through a representative. Residential only.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://contentepi.cellcom.co.il/globalassets/pdf/7/-/ab2e-------.pdf",
+      "source_date": null,
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/cellcom-energy/cellcom-energy-night-168",
+        "https://shtipser.com/plans/"
+      ],
+      "source_date_note": "No date printed. Document code 18818-0426-01 may mean 04/2026 (inferred)."
+    },
+    {
+      "id": "cellcom_flat_sun_thu",
+      "provider_he": "סלקום אנרג'י",
+      "provider_en": "Cellcom Energy",
+      "plan_he": "חסכון משתלם",
+      "plan_en": "Flat saving (Sun-Thu)",
+      "discount_pct": 7.5,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "00:00",
+          "to": "24:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "7.5% on the uniform residential tariff on Sun-Thu only, all hours. Fri and Sat are at full tariff. Private customers on the uniform residential tariff only. The PDF does not require a continuous meter, unlike the windowed plans. Supermarker and Shtipser say a basic meter is OK, while Kamazeole says smart only. 19.90 ILS plan-switch fee. TOU customers are moved to a 6% generation-component plan.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://contentepi.cellcom.co.il/globalassets/pdf/7/-/abff--.pdf",
+      "source_date": null,
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/cellcom-energy/cellcom-energy-flat-167"
+      ],
+      "source_date_note": "No date printed. Document code 18923-0626-01 may mean 06/2026 (inferred)."
+    },
+    {
+      "id": "cellcom_small_bill_tiered",
+      "provider_he": "סלקום אנרג'י",
+      "provider_en": "Cellcom Energy",
+      "plan_he": "חשבון קטן הנחה גדולה",
+      "plan_en": "Small bill, big discount (tiered)",
+      "discount_pct": 10,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "The monthly consumption-component charge sets the rate for the WHOLE month (not marginal tiers): up to 149 ILS gets 10%, 150-199 gets 8%, 200-299 gets 6%, 300+ gets 5%. discount_pct holds the 10% maximum. The PDF says the customer must have a continuous meter ('בעל מונה רציף'). Fixed and kVA charges are not discounted.",
+      "time_limit": null,
+      "status": "unverified_current",
+      "source_url": "https://contentepi.cellcom.co.il/globalassets/pdf/7/-------.pdf",
+      "source_date": null,
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.ynet.co.il/economy/article/bk11s8recbg"
+      ],
+      "discount_tiers": [
+        {
+          "max_consumption_charge_ils": 149,
+          "pct": 10
+        },
+        {
+          "max_consumption_charge_ils": 199,
+          "pct": 8
+        },
+        {
+          "max_consumption_charge_ils": 299,
+          "pct": 6
+        },
+        {
+          "max_consumption_charge_ils": null,
+          "pct": 5
+        }
+      ],
+      "source_date_note": "Undated agreement summary still hosted by Cellcom. Ynet mentioned the plan on 2026-05-03. It is missing from Supermarker (2026-10-02), Kamazeole (2026-10-22) and Shtipser (2026-09-27), so it may be closed to new customers."
+    },
+    {
+      "id": "cellcom_fixed_6",
+      "provider_he": "סלקום אנרג'י",
+      "provider_en": "Cellcom Energy",
+      "plan_he": "חוסכים קבוע / חסכון פלוס",
+      "plan_en": "Fixed 6% (legacy?)",
+      "discount_pct": 6,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "All hours, all days, any meter, per ICE (2026-08-02) and EasySwitch (09/2026). Ynet (2025-02-06) gave it as 5% in year 1 and 6% from year 2. Cellcom's own documents were not found, and the current comparison lists do not include it. Probably a legacy plan.",
+      "time_limit": null,
+      "status": "unverified_current",
+      "source_url": "https://easyswitch.co.il/suppliers/cellcom-energy/",
+      "source_date": "2026-09",
+      "secondary_only": true,
+      "cross_check": [
+        "https://www.ice.co.il/consumerism/news/article/1123585",
+        "https://www.ynet.co.il/economy/article/sjbivxfkkg"
+      ]
+    },
+    {
+      "id": "bezeq_24_7",
+      "provider_he": "בזק אנרג'י (בזק-ג'ן בע\"מ)",
+      "provider_en": "Bezeq Energy",
+      "plan_he": "חוסכים חכם 24/7",
+      "plan_en": "Smart Saver 24/7",
+      "discount_pct": 6,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "6% all day on the variable (kWh) component. The customer's IEC bill must be on the uniform residential tariff. Available with a basic meter (basic-meter agreement v2 03/26). Bezeq may change the discount with 60 days' notice. Unused discount is not carried over or refunded.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.bezeq.co.il/media/PDF/electricity_agreement_smart_meter.pdf",
+      "source_date": "2026-03",
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.bezeq.co.il/media/PDF/electricity_agreement_basic_meter.pdf",
+        "https://www.bezeq.co.il/bloghome/Benergy/changes/"
+      ]
+    },
+    {
+      "id": "bezeq_day",
+      "provider_he": "בזק אנרג'י (בזק-ג'ן בע\"מ)",
+      "provider_en": "Bezeq Energy",
+      "plan_he": "חוסכים חכם ביום",
+      "plan_en": "Smart Saver Day",
+      "discount_pct": 15,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "07:00",
+          "to": "17:00"
+        }
+      ],
+      "excludes_holidays": true,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "Sun-Thu ('ימים א' עד ה'') 07:00-17:00, excluding holiday eves and holidays ('לא כולל ערבי חג וחג'). Holidays defined: Rosh Hashana (2 days), Yom Kippur, Sukkot day 1, Shemini Atzeret, Pesach days 1 and 7, Shavuot, Independence Day. The hours of a holiday eve are not defined. Needs a continuous remote-read meter with at least half-hourly data. Uniform residential tariff only. 60 days' notice for discount changes.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.bezeq.co.il/media/PDF/electricity_agreement_smart_meter.pdf",
+      "source_date": "2026-03",
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/bezeq-energy/bezeq-energy-day-163"
+      ],
+      "holidays_excluded": [
+        "rosh_hashana_1",
+        "rosh_hashana_2",
+        "yom_kippur",
+        "sukkot_1",
+        "shemini_atzeret",
+        "pesach_1",
+        "pesach_7",
+        "shavuot",
+        "yom_haatzmaut"
+      ]
+    },
+    {
+      "id": "bezeq_night",
+      "provider_he": "בזק אנרג'י (בזק-ג'ן בע\"מ)",
+      "provider_en": "Bezeq Energy",
+      "plan_he": "חוסכים חכם בלילה",
+      "plan_en": "Smart Saver Night",
+      "discount_pct": 20,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "23:00",
+          "to": "07:00"
+        }
+      ],
+      "excludes_holidays": true,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "Sun-Thu 23:00-07:00, excluding holiday eves and holidays (same holiday list as the Day plan). The agreement does not say whether Thu-night hours after midnight (Fri 00:00-07:00) count. Smart meter required. Uniform residential tariff only.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.bezeq.co.il/media/PDF/electricity_agreement_smart_meter.pdf",
+      "source_date": "2026-03",
+      "secondary_only": false,
+      "cross_check": [
+        "https://www.supermarker.themarker.com/bills/electricity/bezeq-energy/bezeq-energy-night-164"
+      ],
+      "holidays_excluded": [
+        "rosh_hashana_1",
+        "rosh_hashana_2",
+        "yom_kippur",
+        "sukkot_1",
+        "shemini_atzeret",
+        "pesach_1",
+        "pesach_7",
+        "shavuot",
+        "yom_haatzmaut"
+      ]
+    },
+    {
+      "id": "partner_fixed_tiered",
+      "provider_he": "פרטנר פאוור (או.פי.סי רותם)",
+      "provider_en": "Partner Power",
+      "plan_he": "הנחה קבועה כל היום",
+      "plan_en": "Fixed all day (rises with tenure)",
+      "discount_pct": 5,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": 8.1,
+      "conditions": "Quoted from Partner's site via Supermarker: 5% in months 1-12, 6% from month 13 and 7% from month 25 after supply starts, all hours. Discount on the kWh rate only. Fees per Supermarker: standing-order handling 8.10 ILS/month (unclear whether it applies to credit-card payers), debit-authority setup 40.55 ILS, plan switch 4.90-59.90 ILS. Not for TOU customers. Leaving resets tenure (Kamazeole).",
+      "time_limit": "Tiered by tenure: 5% (months 1-12), 6% (13-24), 7% (25+)",
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/partner-power/partner-power-fixed-174",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [
+        "https://www.kamazeole.co.il/packages/electric/company/66/partner-power"
+      ],
+      "discount_schedule": [
+        {
+          "from_month": 1,
+          "pct": 5
+        },
+        {
+          "from_month": 13,
+          "pct": 6
+        },
+        {
+          "from_month": 25,
+          "pct": 7
+        }
+      ],
+      "supplier_reference": "https://www.partner.co.il/n/partnerpower/lobby",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "partner_work_from_home",
+      "provider_he": "פרטנר פאוור (או.פי.סי רותם)",
+      "provider_en": "Partner Power",
+      "plan_he": "עובדים מהבית",
+      "plan_en": "Work from home (day)",
+      "discount_pct": 15,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "07:00",
+          "to": "17:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": 8.1,
+      "conditions": "Sun-Thu 07:00-17:00. Smart meter only. Other hours and Fri/Sat at full tariff. kWh rate only. Same fees as the fixed plan.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/partner-power/partner-power-work-from-home-176",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [],
+      "supplier_reference": "https://www.partner.co.il/n/partnerpower/lobby",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "partner_night_owls",
+      "provider_he": "פרטנר פאוור (או.פי.סי רותם)",
+      "provider_en": "Partner Power",
+      "plan_he": "חיות לילה",
+      "plan_en": "Night owls",
+      "discount_pct": 20,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "23:00",
+          "to": "07:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": 8.1,
+      "conditions": "Quoted text: '20% הנחה בימים א׳-ה׳ בין 23:00 ל-07:00 למחרת... בשאר שעות היממה ובימי שישי ושבת חל התעריף המלא'. Smart meter only. kWh rate only. Whether Fri 00:00-07:00 counts is contradictory: the window runs to 07:00 'the next day', but Fridays are said to be at full tariff.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/partner-power/partner-power-night-175",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [],
+      "supplier_reference": "https://www.partner.co.il/n/partnerpower/lobby",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "hot_24_7",
+      "provider_he": "הוט אנרג'י",
+      "provider_en": "HOT Energy",
+      "plan_he": "חוסכים 24/7",
+      "plan_en": "Savers 24/7",
+      "discount_pct": 5,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "5% all hours, open to everyone. Consumption component only. Not for TOU-tariff customers or homes with a solar (export) meter. Licensee is assigned at sign-up: IPM Beer Tuvia, Dorad Energy or Dalia Energies.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/hot-energy/hot-energy-24-7-170",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [
+        "https://www.kamazeole.co.il/packages/electric/company/64/hot-energy"
+      ],
+      "supplier_reference": "https://www.hot.net.il/media/zfmayffc/taknon-hot-energy.pdf",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "hot_fixed_customers",
+      "provider_he": "הוט אנרג'י",
+      "provider_en": "HOT Energy",
+      "plan_he": "חוסכים קבוע",
+      "plan_en": "Fixed savers (HOT customers)",
+      "discount_pct": 6,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "6% all hours for HOT or NEXT TV customers (Supermarker, citing HOT terms). Arbiter and Kamazeole also include HOT mobile customers, and Kamazeole's headline says 7% (inconsistent). Non-customers get the 5% plan. Leaving the HOT group service may cancel eligibility. Not for TOU or solar-export homes.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/hot-energy/hot-energy-fixed-172",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [
+        "https://www.kamazeole.co.il/packages/electric/company/64/hot-energy/hot-energy-smart-saving-fixed-plan",
+        "https://arbiter.co.il/electricity-suppliers-comparison"
+      ],
+      "supplier_reference": "https://www.hot.net.il/media/zfmayffc/taknon-hot-energy.pdf",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "hot_day",
+      "provider_he": "הוט אנרג'י",
+      "provider_en": "HOT Energy",
+      "plan_he": "חוסכים ביום",
+      "plan_en": "Day savers",
+      "discount_pct": 15,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "07:00",
+          "to": "17:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "Sun-Thu 07:00-17:00 per HOT's site. The terms list hours only, without days. Smart meter required. Not for TOU or solar-export homes.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/hot-energy/hot-energy-day-171",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [],
+      "supplier_reference": "https://www.hot.net.il/media/zfmayffc/taknon-hot-energy.pdf",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "hot_night",
+      "provider_he": "הוט אנרג'י",
+      "provider_en": "HOT Energy",
+      "plan_he": "חוסכים בלילה",
+      "plan_en": "Night savers",
+      "discount_pct": 20,
+      "windows": [
+        {
+          "days": [
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu"
+          ],
+          "from": "23:00",
+          "to": "07:00"
+        }
+      ],
+      "excludes_holidays": null,
+      "meter": "smart",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "Sun-Thu 23:00-07:00; other hours and the weekend at full tariff. Smart meter required. Not for TOU or solar-export homes.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/hot-energy/hot-energy-night-173",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [],
+      "supplier_reference": "https://www.hot.net.il/media/zfmayffc/taknon-hot-energy.pdf",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "amisragas_basic",
+      "provider_he": "אמישראגז ENERGY (בית זיקוק אשדוד)",
+      "provider_en": "Amisragas Energy",
+      "plan_he": "הנחה קבועה",
+      "plan_en": "Fixed discount",
+      "discount_pct": 6,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "6% all hours, all days, any meter. No commitment; the consumer agreement allows ending at any time with 30 days' written notice (per Arbiter). A basic meter needs a verified reading before the switch. Consumption component only.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/amisragas/amisragas-basic-160",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [
+        "https://arbiter.co.il/electricity-suppliers-comparison"
+      ],
+      "supplier_reference": "https://www.amisragas.co.il/electricity/",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "amisragas_gas_customers",
+      "provider_he": "אמישראגז ENERGY (בית זיקוק אשדוד)",
+      "provider_en": "Amisragas Energy",
+      "plan_he": "הנחה ללקוחות גז",
+      "plan_en": "Gas customers",
+      "discount_pct": 7,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": null,
+      "conditions": "7% all hours for private Amisragas gas customers: connected to an Amisragas central gas system in the building, or ordered gas cylinders from Amisragas in the last 1.5 years (Poenta 2025-03-18, Arbiter 2026-10-23). Reverts to 6% if the customer stops being a gas customer (Arbiter).",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/amisragas/amisragas-gas-customers-161",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [
+        "https://www.poenta.co.il/article/amisragas-energy/"
+      ],
+      "supplier_reference": "https://www.amisragas.co.il/electricity/",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "pazgas_fixed",
+      "provider_he": "פזגז חשמל (פזגז + דוראד אנרגיה)",
+      "provider_en": "Pazgas Electricity",
+      "plan_he": "חוסכים קבוע",
+      "plan_en": "Fixed savers",
+      "discount_pct": 5,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": true,
+      "consumption_only": true,
+      "monthly_fee_ils": 2.9,
+      "conditions": "5% all hours, all days, any meter. 2.90 ILS/month incl. VAT operating fee, charged even in months with no consumption (fee terms dated 2025-09-01, per Supermarker). Fixed charges not discounted. TOU customers are moved to another plan automatically.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/pazgas/pazgas-fixed-177",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [
+        "https://easyswitch.co.il/suppliers/"
+      ],
+      "supplier_reference": "https://www.pazgas.co.il/",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "pazgas_yellow_cashback",
+      "provider_he": "פזגז חשמל (פזגז + דוראד אנרגיה)",
+      "provider_en": "Pazgas Electricity",
+      "plan_he": "צוברים קבוע (צבירה ב-Yellow)",
+      "plan_en": "Yellow wallet cashback",
+      "discount_pct": 0,
+      "windows": [],
+      "excludes_holidays": null,
+      "meter": "any",
+      "bill_discount": false,
+      "consumption_only": true,
+      "monthly_fee_ils": 2.9,
+      "conditions": "NOT a bill discount: the full bill is paid and 10% of the consumption component is credited to the Yellow app wallet. Caps: 50 ILS/month and 600 ILS/year. If less than 50 ILS accrues in a quarter (across all Yellow cashback channels), that quarter's credit is erased. Requires Yellow membership. 2.90 ILS/month operating fee.",
+      "time_limit": null,
+      "status": "current",
+      "source_url": "https://www.supermarker.themarker.com/bills/electricity/pazgas/pazgas-yellow-cashback-178",
+      "source_date": "2026-10-02",
+      "secondary_only": true,
+      "cross_check": [],
+      "cashback_pct": 10,
+      "cashback_cap_ils": {
+        "monthly": 50,
+        "yearly": 600
+      },
+      "supplier_reference": "https://www.pazgas.co.il/",
+      "supplier_reference_note": "Supplier page/terms cited by the secondary source; could not be fetched here (JS-only page or robots-blocked)."
+    },
+    {
+      "id": "iec_tou",
+      "provider_he": "חברת החשמל",
+      "provider_en": "Israel Electric",
+      "plan_he": "תעו״ז",
+      "plan_en": "Time-of-use tariff (low voltage)",
+      "special": "tou",
+      "discount_pct": 0,
+      "windows": [],
+      "conditions": "Regulated time-of-use tariff, priced by season and hour from tou_tariff. Requires a TOU meter; a different fixed charge applies (tou_tariff.fixed_charge_monthly). Holidays are not modelled yet.",
+      "status": "current"
+    }
+  ]
+}

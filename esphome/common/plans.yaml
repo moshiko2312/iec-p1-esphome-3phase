@@ -19,6 +19,30 @@ select:
       # BEGIN PLANS
       - "ללא הנחה"
       - "מותאם אישית"
+      - "סופר פאוור – POWER"
+      - "סופר פאוור – מסלול יום"
+      - "סופר פאוור – לילה פלוס"
+      - "סופר פאוור – 10X10"
+      - "סלקום – חסכון ביום"
+      - "סלקום – חסכון למשפחות"
+      - "סלקום – חסכון בלילה"
+      - "סלקום – חסכון משתלם"
+      - "בזק – חוסכים חכם 24/7"
+      - "בזק – חוסכים חכם ביום"
+      - "בזק – חוסכים חכם בלילה"
+      - "פרטנר – הנחה קבועה כל היום (שנה ראשונה)"
+      - "פרטנר – הנחה קבועה כל היום (שנה שנייה)"
+      - "פרטנר – הנחה קבועה כל היום (משנה שלישית)"
+      - "פרטנר – עובדים מהבית"
+      - "פרטנר – חיות לילה"
+      - "הוט – חוסכים 24/7"
+      - "הוט – חוסכים קבוע"
+      - "הוט – חוסכים ביום"
+      - "הוט – חוסכים בלילה"
+      - "אמישראגז – הנחה קבועה"
+      - "אמישראגז – הנחה ללקוחות גז"
+      - "פזגז – חוסכים קבוע"
+      - "חברת החשמל – תעו״ז"
       # END PLANS
     on_value:
       - script.execute: update_price
@@ -37,10 +61,36 @@ script:
           //       iecp1::SUN_TO_THU (0x1F), iecp1::EVERY_DAY (0x7F).
           // from_min/to_min: minutes after midnight, to is exclusive, may cross midnight.
           // base_pct NAN = built from the Custom* settings.
+          // base_pct iecp1::TOU = IEC time-of-use tariff: priced by season and hour
+          //                       from the table in iec_p1.h, Base Price is not used.
           static const Plan PLANS[] = {
               // BEGIN PLANS
               {"ללא הנחה", 0, 0, {}},
               {"מותאם אישית", NAN, 0, {}},
+              {"סופר פאוור – POWER", 6.5f, 0, {}},
+              {"סופר פאוור – מסלול יום", 0.0f, 1, {{0x1F, 420, 1020, 21.0f}}},
+              {"סופר פאוור – לילה פלוס", 0.0f, 1, {{0x1F, 1380, 420, 21.0f}}},
+              {"סופר פאוור – 10X10", 0.0f, 1, {{0x1F, 600, 1320, 10.0f}}},
+              {"סלקום – חסכון ביום", 0.0f, 1, {{0x1F, 420, 1020, 20.0f}}},
+              {"סלקום – חסכון למשפחות", 0.0f, 1, {{0x1F, 840, 1200, 18.0f}}},
+              {"סלקום – חסכון בלילה", 0.0f, 1, {{0x7F, 1380, 420, 15.0f}}},
+              {"סלקום – חסכון משתלם", 0.0f, 1, {{0x1F, 0, 1440, 7.5f}}},
+              {"בזק – חוסכים חכם 24/7", 6.0f, 0, {}},
+              {"בזק – חוסכים חכם ביום", 0.0f, 1, {{0x1F, 420, 1020, 15.0f}}},
+              {"בזק – חוסכים חכם בלילה", 0.0f, 1, {{0x1F, 1380, 420, 20.0f}}},
+              {"פרטנר – הנחה קבועה כל היום (שנה ראשונה)", 5.0f, 0, {}},
+              {"פרטנר – הנחה קבועה כל היום (שנה שנייה)", 6.0f, 0, {}},
+              {"פרטנר – הנחה קבועה כל היום (משנה שלישית)", 7.0f, 0, {}},
+              {"פרטנר – עובדים מהבית", 0.0f, 1, {{0x1F, 420, 1020, 15.0f}}},
+              {"פרטנר – חיות לילה", 0.0f, 1, {{0x1F, 1380, 420, 20.0f}}},
+              {"הוט – חוסכים 24/7", 5.0f, 0, {}},
+              {"הוט – חוסכים קבוע", 6.0f, 0, {}},
+              {"הוט – חוסכים ביום", 0.0f, 1, {{0x1F, 420, 1020, 15.0f}}},
+              {"הוט – חוסכים בלילה", 0.0f, 1, {{0x1F, 1380, 420, 20.0f}}},
+              {"אמישראגז – הנחה קבועה", 6.0f, 0, {}},
+              {"אמישראגז – הנחה ללקוחות גז", 7.0f, 0, {}},
+              {"פזגז – חוסכים קבוע", 5.0f, 0, {}},
+              {"חברת החשמל – תעו״ז", iecp1::TOU, 0, {}},
               // END PLANS
           };
 
@@ -69,25 +119,36 @@ script:
           if (plan == nullptr)
             ESP_LOGW("plans", "Plan '%s' is missing from the PLANS table", option.empty() ? "" : option.c_str());
 
-          float discount = 0;
-          float weekly = 0;
-          std::string window;
-          if (plan != nullptr) {
-            discount = plan->base_pct;
-            weekly = iecp1::weekly_average(*plan);
-            const auto t = iecp1::to_local(id(sntp_time).now());
-            if (t.valid) {
-              const int i = iecp1::match_window(*plan, t.dow, t.minute);
-              if (i >= 0) {
-                discount = plan->windows[i].pct;
-                window = iecp1::window_label(plan->windows[i]);
-              }
-            }
-          }
-
+          const auto t = iecp1::to_local(id(sntp_time).now());
           const float base = id(base_price).state;
-          const float price = (std::isnan(base) || base <= 0) ? NAN : base * (1.0f - discount / 100.0f);
-          iecp1::engine().set_price(price, discount, weekly, window);
+          const bool base_ok = !std::isnan(base) && base > 0;
+          float discount = 0;
+          float price = NAN;
+          float weekly_price = NAN;  // week-average price, for the baseload cost
+          std::string window;
+          if (plan != nullptr && iecp1::is_tou(*plan)) {
+            if (t.valid) {
+              price = iecp1::tou_price(t.month, t.dow, t.minute);
+              weekly_price = iecp1::tou_weekly_average(t.month);
+              window = iecp1::tou_label(t.month, t.dow, t.minute);
+            }
+          } else {
+            if (plan != nullptr) {
+              discount = plan->base_pct;
+              if (t.valid) {
+                const int i = iecp1::match_window(*plan, t.dow, t.minute);
+                if (i >= 0) {
+                  discount = plan->windows[i].pct;
+                  window = iecp1::window_label(plan->windows[i]);
+                }
+              }
+              if (base_ok)
+                weekly_price = base * (1.0f - iecp1::weekly_average(*plan) / 100.0f);
+            }
+            if (base_ok)
+              price = base * (1.0f - discount / 100.0f);
+          }
+          iecp1::engine().set_price(price, discount, weekly_price, window);
 
           id(price_sensor).publish_state(price);
           id(discount_sensor).publish_state(discount);

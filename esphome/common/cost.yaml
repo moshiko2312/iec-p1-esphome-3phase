@@ -227,7 +227,7 @@ script:
           const auto t = iecp1::to_local(id(sntp_time).now());
           id(forecast_month).publish_state(e.forecast_month(t, id(fixed_charge).state));
           id(baseload).publish_state(e.baseload(t));
-          id(baseload_cost).publish_state(e.baseload_cost(t, id(base_price).state));
+          id(baseload_cost).publish_state(e.baseload_cost(t));
 
 # ---------------------------------------------------------------------------
 # Results

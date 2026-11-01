@@ -54,9 +54,9 @@ static int failures = 0;
 #define CHECK(c) do { if (!(c)) { std::printf("    FAIL line %d: %s\n", __LINE__, #c); failures++; } } while (0)
 static bool near(double a, double b) { return std::fabs(a - b) < 0.0005; }
 
-static iecp1::LocalTime at(int dow, int hour, int minute) {
+static iecp1::LocalTime at(int dow, int hour, int minute, int month = 11) {
   iecp1::LocalTime t;
-  t.valid = true; t.year = 2026; t.month = 11; t.day = 1 + dow; t.dow = dow;
+  t.valid = true; t.year = 2026; t.month = month; t.day = 1 + dow; t.dow = dow;
   t.minute = hour * 60 + minute; t.epoch = 1793000000u;
   return t;
 }
@@ -75,7 +75,7 @@ int main() {
   @@UPDATE_PRICE@@(0, 0);  // Thursday 23:30
   CHECK(discount_sensor->state == 20);
   CHECK(near(price_sensor->state, 0.6352 * 0.8));
-  CHECK(discount_window->state == "23:00\xE2\x80\x93" "07:00");
+  CHECK(discount_window->state == "\xE2\x81\xA6" "23:00\xE2\x80\x93" "07:00" "\xE2\x81\xA9");
   sntp_time->t = at(5, 23, 30);  // Friday night: not in the window
   @@UPDATE_PRICE@@(0, 0);
   CHECK(discount_sensor->state == 5);
@@ -89,6 +89,26 @@ int main() {
   sntp_time->t = iecp1::LocalTime{};
   @@UPDATE_PRICE@@(0, 0);
   CHECK(discount_sensor->state == 5);  // base only until the clock is set
+
+  std::printf("4. IEC time-of-use: price from the tariff table, Base Price ignored\n");
+  supplier_plan->option = "חברת החשמל – תעו״ז";
+  base_price->state = 9.99f;
+  sntp_time->t = at(4, 18, 0, 7);  // summer Thursday 18:00
+  @@UPDATE_PRICE@@(0, 0);
+  CHECK(near(price_sensor->state, iecp1::TOU_SEASONS[2].peak));
+  CHECK(discount_sensor->state == 0);
+  CHECK(discount_window->state == "שיא " "\xE2\x81\xA6" "17:00\xE2\x80\x93" "23:00" "\xE2\x81\xA9");
+  sntp_time->t = at(5, 18, 0, 7);  // summer Friday 18:00
+  @@UPDATE_PRICE@@(0, 0);
+  CHECK(near(price_sensor->state, iecp1::TOU_SEASONS[2].off_peak));
+  CHECK(discount_window->state == "שפל כל היום");
+  sntp_time->t = at(6, 18, 0, 1);  // winter Saturday 18:00
+  @@UPDATE_PRICE@@(0, 0);
+  CHECK(near(price_sensor->state, iecp1::TOU_SEASONS[0].peak));
+  sntp_time->t = iecp1::LocalTime{};  // no clock yet: price unknown, not a guess
+  @@UPDATE_PRICE@@(0, 0);
+  CHECK(std::isnan(price_sensor->state));
+  base_price->state = 0.6352f;
 
   std::printf(failures ? "\n%d check(s) FAILED\n" : "\nAll checks passed\n", failures);
   return failures;

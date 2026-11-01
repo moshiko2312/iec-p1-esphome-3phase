@@ -48,7 +48,7 @@ int main() {
   CHECK(discount_at(night, 0, 2 * 60) == 5);         // Sun 02:00 belongs to Sat
   CHECK(discount_at(night, 0, 23 * 60) == 20);       // Sun 23:00
   CHECK(discount_at(night, 1, 7 * 60) == 5);         // 07:00 is exclusive
-  CHECK(window_label(night.windows[0]) == "23:00\xE2\x80\x93" "07:00");
+  CHECK(window_label(night.windows[0]) == "\xE2\x81\xA6" "23:00\xE2\x80\x93" "07:00" "\xE2\x81\xA9");
 
   std::printf("3. Day window, first match wins, weekly average\n");
   const Plan day{"day", 0, 2, {{SUN_TO_THU, 7 * 60, 17 * 60, 15}, {EVERY_DAY, 0, 24 * 60 - 1, 3}}};
@@ -62,7 +62,7 @@ int main() {
 
   std::printf("4. Engine: first day partial, second day full, third day compares\n");
   Engine e;
-  e.set_price(0.5f, 0, 0, "");
+  e.set_price(0.5f, 0, 0.5f, "");
   double meter = 1000.0;
   e.on_energy(meter, at(2, 10, 0));          // baseline only
   CHECK(near(e.energy_today(), 0));
@@ -75,7 +75,7 @@ int main() {
   CHECK(std::isnan(e.yesterday_so_far(at(3, 0, 0))));  // day 2 was partial
   // Day 3: 1 kWh per hour from 00:00 to 24:00, price 0.5 then 0.4 after 12:00
   for (int h = 1; h <= 24; h++) {
-    if (h == 13) e.set_price(0.4f, 20, 0, "12:00\xE2\x80\x93" "24:00");
+    if (h == 13) e.set_price(0.4f, 20, 0.6352f, "12:00\xE2\x80\x93" "24:00");
     meter += 1.0;
     if (h < 24) {
       e.on_energy(meter, at(3, h, 0));
@@ -115,7 +115,7 @@ int main() {
   e.on_power(0.25f, at(4, 15, 0));
   e.minute_tick(at(4, 15, 1));
   CHECK(near(e.baseload(at(4, 15, 2)), 0.25));
-  CHECK(near(e.baseload_cost(at(4, 15, 2), 0.6352f), 0.25 * 720 * 0.6352, 0.01));
+  CHECK(near(e.baseload_cost(at(4, 15, 2)), 0.25 * 720 * 0.6352, 0.01));
   CHECK(std::isnan(e.baseload(at(6, 16, 0))));  // older than 24 hours
 
   std::printf("7. Forecast and month rollover\n");
@@ -143,6 +143,53 @@ int main() {
   CHECK(std::isnan(fresh.stats().last_energy));
   fresh.adopt(e.stats());
   CHECK(near(fresh.energy_today(), 2.0));
+
+
+  std::printf("10. IEC time-of-use: seasons\n");
+  const int SEASON_EXPECTED[12] = {0, 0, 1, 1, 1, 2, 2, 2, 2, 1, 1, 0};  // Jan..Dec
+  for (int m = 1; m <= 12; m++)
+    CHECK(&tou_season(m) == &TOU_SEASONS[SEASON_EXPECTED[m - 1]]);
+  CHECK(std::string(tou_season(2).name) == "חורף");
+  CHECK(std::string(tou_season(3).name) == "מעבר");
+  CHECK(std::string(tou_season(9).name) == "קיץ");
+  CHECK(std::string(tou_season(10).name) == "מעבר");
+  CHECK(std::string(tou_season(12).name) == "חורף");
+  // Current table (Electricity Authority, from 2026-07-01), ILS/kWh incl. VAT
+  CHECK(near(TOU_SEASONS[0].off_peak, 0.4663) && near(TOU_SEASONS[0].peak, 1.1470));
+  CHECK(near(TOU_SEASONS[1].off_peak, 0.4578) && near(TOU_SEASONS[1].peak, 0.4958));
+  CHECK(near(TOU_SEASONS[2].off_peak, 0.5042) && near(TOU_SEASONS[2].peak, 1.7223));
+
+  std::printf("11. IEC time-of-use: peak boundaries\n");
+  // dow: 0 = Sunday ... 6 = Saturday
+  CHECK(tou_is_peak(1, 6, 18 * 60));            // winter Saturday 18:00 = peak (every day)
+  CHECK(tou_is_peak(12, 5, 17 * 60));           // winter Friday 17:00 = peak
+  CHECK(!tou_is_peak(1, 2, 16 * 60 + 59));      // winter 16:59 = off-peak
+  CHECK(!tou_is_peak(1, 2, 22 * 60));           // winter 22:00 = off-peak (end is exclusive)
+  CHECK(tou_is_peak(7, 4, 17 * 60));            // summer Thursday 17:00 = peak
+  CHECK(tou_is_peak(7, 4, 22 * 60 + 59));       // summer Thursday 22:59 = peak
+  CHECK(!tou_is_peak(7, 4, 23 * 60));           // summer 23:00 = off-peak
+  CHECK(!tou_is_peak(7, 5, 18 * 60));           // summer Friday 18:00 = off-peak
+  CHECK(!tou_is_peak(8, 6, 20 * 60));           // summer Saturday = off-peak
+  CHECK(tou_is_peak(3, 0, 18 * 60));            // transition Sunday 18:00 = peak
+  CHECK(!tou_is_peak(11, 6, 18 * 60));          // transition Saturday 18:00 = off-peak
+  CHECK(!tou_is_peak(5, 1, 22 * 60 + 30));      // transition 22:30 = off-peak
+  CHECK(tou_is_peak(5, 1, 21 * 60 + 59) && !tou_is_peak(6, 1, 23 * 60 + 30));  // May 31 vs June
+  CHECK(near(tou_price(7, 3, 18 * 60), TOU_SEASONS[2].peak));
+  CHECK(near(tou_price(7, 5, 18 * 60), TOU_SEASONS[2].off_peak));
+  CHECK(near(tou_price(1, 6, 18 * 60), TOU_SEASONS[0].peak));
+
+  std::printf("12. IEC time-of-use: labels and weekly average\n");
+  CHECK(tou_label(7, 3, 18 * 60) == "שיא " "\xE2\x81\xA6" "17:00\xE2\x80\x93" "23:00" "\xE2\x81\xA9");
+  CHECK(tou_label(1, 6, 18 * 60) == "שיא " "\xE2\x81\xA6" "17:00\xE2\x80\x93" "22:00" "\xE2\x81\xA9");
+  CHECK(tou_label(7, 3, 10 * 60) == "שפל עד " "\xE2\x81\xA6" "17:00" "\xE2\x81\xA9");
+  CHECK(tou_label(7, 3, 23 * 60 + 30) == "שפל מ-" "\xE2\x81\xA6" "23:00" "\xE2\x81\xA9");
+  CHECK(tou_label(7, 5, 18 * 60) == "שפל כל היום");
+  const double summer = (5 * 6 * TOU_SEASONS[2].peak + (168 - 30) * TOU_SEASONS[2].off_peak) / 168.0;
+  CHECK(near(tou_weekly_average(7), summer, 0.0005));
+  const double winter = (7 * 5 * TOU_SEASONS[0].peak + (168 - 35) * TOU_SEASONS[0].off_peak) / 168.0;
+  CHECK(near(tou_weekly_average(1), winter, 0.0005));
+  const Plan tou_plan{"tou", TOU, 0, {}};
+  CHECK(is_tou(tou_plan) && !is_tou(flat) && !is_tou(Plan{"c", NAN, 0, {}}));
 
   std::printf(failures ? "\n%d check(s) FAILED\n" : "\nAll checks passed\n", failures);
   return failures ? 1 : 0;
