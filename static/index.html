@@ -103,7 +103,7 @@ footer { margin-top: 26px; text-align: center; color: var(--ink-3); font-size: 1
     <h2>איזה לוח יש לך?</h2>
     <div class="boards" role="radiogroup" aria-label="סוג הלוח">
       <label class="board"><input type="radio" name="board" value="esp32" checked><b>ESP32 עם Wi-Fi</b><span>לוח 30 פינים, מקבל מתח מהמונה</span></label>
-      <label class="board"><input type="radio" name="board" value="poe"><b>לוח PoE</b><span>של Everything Smart Home, כבל רשת אחד למתח ולתקשורת</span></label>
+      <label class="board"><input type="radio" name="board" value="poe"><b>EST-PoE-32</b><span>של Everything Smart Home, כבל רשת אחד למתח ולתקשורת</span></label>
     </div>
 
     <div class="warn" role="note">
@@ -148,7 +148,7 @@ footer { margin-top: 26px; text-align: center; color: var(--ink-3); font-size: 1
 <script>
   const installer = document.getElementById("installer");
   const files = document.getElementById("files");
-  const label = { esp32: "ESP32 עם Wi-Fi", poe: "לוח PoE" };
+  const label = { esp32: "ESP32 עם Wi-Fi", poe: "EST-PoE-32" };
 
   async function showFiles(board) {
     const base = `firmware/${board}/`;

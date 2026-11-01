@@ -12,11 +12,10 @@ const PORTAL = path.join(__dirname, "../../esphome/ui/portal.html");
 const INDEX = "<!DOCTYPE html><html><head><meta charset=UTF-8><link rel=icon href=data:></head><body><script type=module src=/0.js></script><esp-app></esp-app></body></html>";
 
 const S = (id, value, extra = {}) => ({ id, value, state: typeof value === "number" ? String(value) : value, ...extra });
-const plans = [
-  "ללא הנחה", "מותאם אישית",
-  "סלקום – 7% קבוע", "סלקום – לילה", "פרטנר – 6% קבוע", "פרטנר – יום",
-  "בזק – לילה", "פזגז – 7% קבוע", "פזגז – ערב", "אלקטרה פאוור – יום",
-];
+// the real option list, straight from the firmware
+const plansYaml = fs.readFileSync(path.join(__dirname, "../../esphome/common/plans.yaml"), "utf8");
+const block = plansYaml.match(/^\s*# BEGIN PLANS\s*$([\s\S]*?)^\s*# END PLANS/m)[1];
+const plans = [...block.matchAll(/^\s*- "(.*)"$/gm)].map((m) => m[1]);
 const state = {};
 for (const s of [
   S("sensor/Power", 4.39), S("sensor/Power Export", 0),
@@ -27,8 +26,8 @@ for (const s of [
   S("sensor/Forecast Month", 512.4), S("sensor/Energy Today", 23.4), S("sensor/Compared To Yesterday", 12),
   S("sensor/Peak Today", 6.21), S("text_sensor/Peak Time", "19:42"),
   S("sensor/Baseload", 0.18), S("sensor/Baseload Cost", 79),
-  S("sensor/Price", 0.6034), S("sensor/Discount", 7), S("text_sensor/Discount Window", ""),
-  S("select/Supplier Plan", "פזגז – 7% קבוע", { option: plans }),
+  S("sensor/Price", 0.5082), S("sensor/Discount", 20), S("text_sensor/Discount Window", "23:00–07:00"),
+  S("select/Supplier Plan", "בזק – חוסכים חכם בלילה", { option: plans }),
   S("number/Base Price", "0.6488", { min_value: "0", max_value: "5", step: "0.0001" }),
   S("number/Fixed Charge", "33.69", { min_value: "0", max_value: "500", step: "0.01" }),
   S("number/Breaker Size", "25", { min_value: "6", max_value: "125", step: "1" }),
