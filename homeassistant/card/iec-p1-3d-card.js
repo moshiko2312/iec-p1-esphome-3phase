@@ -1100,7 +1100,7 @@ if (!customElements.get(TAG)) {
     name: "IEC P1 3D",
     description: "Three-phase meter in 3D: load per phase against the breaker, live power and cost.",
     preview: true,
-    documentationURL: "https://github.com/mp3llll/iec-p1-esphome-3phase",
+    documentationURL: "https://github.com/moshiko2312/iec-p1-esphome-3phase",
   });
   console.info(`%c IEC-P1-3D-CARD %c ${CARD_VERSION} `, "background:#2ec5f0;color:#000;border-radius:3px 0 0 3px;padding:2px 4px", "background:#1d2836;color:#fff;border-radius:0 3px 3px 0;padding:2px 4px");
 }

@@ -1,0 +1,130 @@
+name: Build firmware
+
+# Tests and builds both firmware variants on every change. When a release is
+# published, the firmware is attached to it and "Publish site" deploys it to
+# GitHub Pages, where the web installer and the Firmware update entity find it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "esphome/**"
+      - "tests/**"
+      - ".github/workflows/build.yml"
+  pull_request:
+    paths:
+      - "esphome/**"
+      - "tests/**"
+      - ".github/workflows/build.yml"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write  # attach firmware to the release
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ESPHOME_VERSION: "2026.10.1"
+
+jobs:
+  test:
+    name: Host tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: P1 parser
+        run: python3 tests/run_parser_test.py
+      - name: Cost engine and plans
+        run: |
+          g++ -std=c++17 -Wall -Wextra -I esphome/common -o /tmp/test_engine tests/test_engine.cpp
+          /tmp/test_engine
+      - name: YAML lambdas
+        run: python3 tests/run_lambda_test.py
+      - name: Plan tables in sync
+        if: hashFiles('tools/gen_plans.py') != ''
+        run: python3 tools/gen_plans.py --check
+
+  build:
+    name: Build ${{ matrix.variant }}
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [esp32, poe]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set firmware version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            version="${{ github.event.release.tag_name }}"
+          else
+            version="dev-$(date -u +%Y%m%d)-${GITHUB_SHA::7}"
+          fi
+          sed -i "s/version: dev /version: \"${version}\" /" "esphome/electricity-meter-${{ matrix.variant }}.factory.yaml"
+          grep -n "version:" "esphome/electricity-meter-${{ matrix.variant }}.factory.yaml"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        id: build
+        uses: esphome/build-action@ae5408cdbc4f70692bf8e345c4982bca05a93667  # v8.1.0
+        with:
+          yaml-file: esphome/electricity-meter-${{ matrix.variant }}.factory.yaml
+          version: ${{ env.ESPHOME_VERSION }}
+          complete-manifest: true
+          release-summary: ${{ github.event.release.name }}
+          release-url: ${{ github.event.release.html_url }}
+
+      # Both variants are ESP32 builds with the same device name, so the files are
+      # renamed per variant: electricity-meter-<variant>.factory.bin / .ota.bin.
+      - name: Collect files
+        env:
+          SRC: ${{ steps.build.outputs.name }}
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          set -euo pipefail
+          out="out/${VARIANT}"
+          mkdir -p "$out"
+          for f in "$SRC"/*.bin; do
+            ext="${f##*/}"; ext="${ext#*.}"          # factory.bin / ota.bin
+            cp "$f" "$out/electricity-meter-${VARIANT}.${ext}"
+          done
+          jq --arg v "$VARIANT" '
+            .builds |= map(
+              (if .ota.path then .ota.path = "electricity-meter-\($v).ota.bin" else . end)
+              | (.parts |= map(.path = "electricity-meter-\($v).factory.bin"))
+            )' "$SRC/manifest.json" > "$out/manifest.json"
+          cat "$out/manifest.json"
+
+      - name: Size report
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          app=$(stat -c %s "out/${VARIANT}/electricity-meter-${VARIANT}.ota.bin")
+          part=$((0x1C0000))
+          pct=$((app * 100 / part))
+          echo "### ${VARIANT}: app ${app} bytes of ${part} (${pct}% of the OTA partition)" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$app" -gt "$part" ]; then echo "::error::Firmware does not fit the OTA partition"; exit 1; fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.variant }}
+          path: out/${{ matrix.variant }}
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          cp "out/${VARIANT}/manifest.json" "out/electricity-meter-${VARIANT}.manifest.json"
+          gh release upload "${{ github.event.release.tag_name }}" --clobber \
+            "out/${VARIANT}/electricity-meter-${VARIANT}.factory.bin" \
+            "out/${VARIANT}/electricity-meter-${VARIANT}.ota.bin" \
+            "out/electricity-meter-${VARIANT}.manifest.json"

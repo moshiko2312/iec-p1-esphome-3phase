@@ -1,0 +1,70 @@
+name: Publish site
+
+# GitHub Pages holds the web installer (static/) and the firmware of the latest
+# release in firmware/<variant>/ (manifest.json + factory/ota bins). Devices
+# check firmware/<variant>/manifest.json for updates, so only released firmware
+# is ever published here.
+#
+# One-time setup: Settings > Pages > Source: GitHub Actions.
+
+on:
+  workflow_run:
+    workflows: ["Build firmware"]
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - "static/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.event == 'release' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p _site/firmware dl
+          cp -r static/. _site/
+          if gh release download --dir dl --pattern 'electricity-meter-*'; then
+            for v in esp32 poe; do
+              if [ -f "dl/electricity-meter-${v}.manifest.json" ]; then
+                mkdir -p "_site/firmware/${v}"
+                cp "dl/electricity-meter-${v}.manifest.json" "_site/firmware/${v}/manifest.json"
+                cp dl/electricity-meter-${v}.*.bin "_site/firmware/${v}/"
+              fi
+            done
+          else
+            echo "::warning::No release yet - publishing the site without firmware"
+          fi
+          find _site -type f | sort
+
+      - uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
