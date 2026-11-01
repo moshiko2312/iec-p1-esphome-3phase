@@ -672,6 +672,7 @@ class EspApp extends HTMLElement {
         <div class="panel">
           <h2>תעריף ותשלום קבוע</h2>
           <p class="hint">התעריף של חברת החשמל לקוט״ש כולל מע״מ, לפני הנחה.</p>
+          <p class="note" id="touhint" hidden style="margin:0 0 14px">בתעו״ז המחיר נקבע לפי העונה והשעה, והתעריף הזה לא משמש. התשלום הקבוע בתעו״ז גבוה יותר, 56.21 ₪ לחודש כולל מע״מ, לכן כדאי לעדכן אותו כאן.</p>
           ${this.numField("number/Base Price", "תעריף לקוט״ש", "₪", "0.0001")}
           ${this.numField("number/Fixed Charge", "תשלום קבוע לחודש", "₪", "0.01")}
         </div>
@@ -999,7 +1000,11 @@ class EspApp extends HTMLElement {
     const disc = this.num("sensor/Discount");
     const win = this.text("text_sensor/Discount Window");
     $(this, "#price").textContent = isNum(price) ? `₪${price.toFixed(4)}` : "—";
-    $(this, "#pricewhy").innerHTML = isNum(disc) && disc > 0
+    const tou = PLAN_META[this.text("select/Supplier Plan")]?.special === "tou";
+    $(this, "#touhint").hidden = !tou;
+    if (tou) {
+      $(this, "#pricewhy").innerHTML = `המחיר עכשיו בתעו״ז${win ? `, ${ltrTimes(esc(win.replace(/[\u2066-\u2069]/g, "")))}` : ""}`;
+    } else $(this, "#pricewhy").innerHTML = isNum(disc) && disc > 0
       ? `המחיר עכשיו, אחרי ${disc % 1 ? disc.toFixed(1) : disc.toFixed(0)}% הנחה${win ? ` (${ltrTimes(esc(win.replace(/[\u2066-\u2069]/g, "")))})` : ""}`
       : "המחיר עכשיו, ללא הנחה בשעה זו";
     this.renderPlans(false);
@@ -1044,7 +1049,8 @@ class EspApp extends HTMLElement {
     const groups = new Map();
     for (const opt of options) {
       const meta = PLAN_META[opt] || {};
-      if (q && !opt.includes(q) && !(meta.provider || "").includes(q)) continue;
+      const norm = (x) => x.replace(/["'׳״]/g, "");
+      if (q && !norm(opt).includes(norm(q)) && !norm(meta.provider || "").includes(norm(q))) continue;
       const prov = meta.provider || "";
       if (!groups.has(prov)) groups.set(prov, []);
       groups.get(prov).push({ opt, meta });
@@ -1057,7 +1063,7 @@ class EspApp extends HTMLElement {
         html += `<button class="plan" role="radio" aria-checked="${checked}" data-option="${esc(opt)}">
           <span class="dot" aria-hidden="true"></span>
           <span><span class="t">${esc(meta.plan || opt)}</span>${meta.hours ? `<span class="s">${ltrTimes(esc(meta.hours))}</span>` : ""}</span>
-          <span class="pct">${meta.pct ? esc(meta.pct) : ""}</span>
+          <span class="pct">${meta.special === "tou" ? "לפי שעה" : meta.pct ? esc(meta.pct) : ""}</span>
         </button>`;
       }
     }
