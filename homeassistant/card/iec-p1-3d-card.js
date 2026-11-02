@@ -91,7 +91,7 @@ function defaultEntities(meterPrefix) {
 // Phase colours. "gold" matches the reader's own web interface (gold, copper,
 // silver like busbar metals); "classic" is the original cyan/violet/amber.
 const PALETTES = {
-  gold: ["#f0c95c", "#c58468", "#cdd3da"],
+  gold: ["#e8bf55", "#c9773f", "#b9c0c8"],
   classic: ["#2ec5f0", "#9b7cff", "#ffb23e"],
 };
 let PHASE_COLORS = PALETTES.gold;
@@ -237,57 +237,40 @@ const STYLE = `
   --tag-ink: #17212c;
   --focus: #0a6fd6;
 }
-/* gold look (default) */
+/* gold look (default): the same black-and-gold as the reader's own web page,
+   in every Home Assistant theme */
 :host([look="gold"]) {
-  --scene-a: #201d17;
-  --scene-b: #12110f;
   --ink: #f4eee0;
   --ink-2: #c3b79c;
   --ink-3: #8a7f67;
-  --rule: rgba(232, 191, 85, 0.14);
-  --floor: #1d1b16;
-  --floor-edge: #3a3326;
-  --slab-s: #16140f;
-  --slab-e: #110f0b;
+  --rule: rgba(232, 191, 85, 0.16);
+  --floor: #1b1a16;
+  --floor-edge: rgba(232, 191, 85, 0.22);
+  --slab-s: #0e0d0b;
+  --slab-e: #0a0908;
   --grid: rgba(232, 191, 85, 0.06);
   --glass: rgba(255, 236, 190, 0.03);
   --glass-hi: rgba(255, 236, 190, 0.08);
   --glass-edge: rgba(232, 191, 85, 0.3);
-  --lcd-off: rgba(232, 191, 85, 0.07);
-  --lcd-glow: rgba(232, 191, 85, 0.4);
-  --tag-bg: rgba(18, 17, 15, 0.82);
+  --lcd-off: rgba(232, 191, 85, 0.06);
+  --lcd-glow: rgba(232, 191, 85, 0.35);
+  --tag-bg: rgba(18, 17, 15, 0.85);
+  --tag-ink: #f4eee0;
   --focus: #fff3c4;
 }
-:host([look="gold"][theme="light"]) {
-  --scene-a: #fbf7ee;
-  --scene-b: #efe6d2;
-  --ink: #2a2214;
-  --ink-2: #6b5a3a;
-  --ink-3: #93825f;
-  --rule: rgba(150, 110, 30, 0.16);
-  --floor: #fffdf8;
-  --floor-edge: #d9c9a3;
-  --slab-s: #e6d8b8;
-  --slab-e: #d6c49c;
-  --grid: rgba(150, 110, 30, 0.08);
-  --glass: rgba(150, 110, 30, 0.04);
-  --glass-hi: rgba(150, 110, 30, 0.08);
-  --glass-edge: rgba(150, 110, 30, 0.32);
-  --lcd-off: rgba(150, 110, 30, 0.08);
-  --lcd-glow: transparent;
-  --tag-bg: rgba(255, 253, 248, 0.94);
-  --tag-ink: #2a2214;
-  --focus: #8a6418;
+:host([look="gold"]) ha-card {
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(232, 191, 85, 0.13), transparent 60%),
+    #12110f;
+  border: 1px solid rgba(232, 191, 85, 0.16);
 }
-:host([look="gold"]) .lcd svg .on { fill: url(#lcdgold); }
-:host([look="gold"][theme="light"]) .lcd svg .on { fill: #8a6418; }
+:host([look="gold"]) .lcd svg .on { fill: url(#lcdgold); filter: drop-shadow(0 0 6px rgba(232, 191, 85, 0.35)); }
 :host([look="gold"]) .rate-val {
   background: linear-gradient(135deg, #fff1b8 0%, #e8bf55 38%, #b8862b 62%, #f2d27a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-:host([look="gold"][theme="light"]) .rate-val { background: none; color: #8a6418; }
 ha-card {
   overflow: hidden;
   background: linear-gradient(170deg, var(--scene-a), var(--scene-b));
@@ -965,7 +948,8 @@ class IecP13dCard extends HTMLElement {
     if (!this._hass || !this._config) return;
     if (this._built && !this._changed()) return;
     const dark = this._hass.themes?.darkMode;
-    this.setAttribute("theme", dark === false ? "light" : "dark");
+    const gold = this._config.style !== "classic";
+    this.setAttribute("theme", gold || dark !== false ? "dark" : "light");
     if (!this._built) { this._build(); this._changed(); }
 
     const t = this._t();
