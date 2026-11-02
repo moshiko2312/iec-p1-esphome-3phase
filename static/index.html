@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#12110f">
+<meta name="theme-color" content="#080807">
 <title>צריבת קורא המונה</title>
 <meta name="description" content="צריבת הקושחה לקורא P1 של מונה תלת-פאזי של חברת החשמל, ישר מהדפדפן.">
 <script type="module" src="https://cdn.jsdelivr.net/npm/esp-web-tools@10.4.0/dist/web/install-button.js"></script>
 <style>
 :root {
-  --bg: #12110f;
-  --panel: #1b1a16;
-  --panel-2: #24221c;
+  --bg: #080807;
+  --panel: #12110f;
+  --panel-2: #12110f;
   --line: rgba(232, 191, 85, 0.16);
   --line-2: rgba(232, 191, 85, 0.34);
   --ink: #f4eee0;
@@ -26,10 +26,10 @@
   /* ESP Web Tools dialogs (Material 3) in the same gold */
   --md-sys-color-primary: #e8bf55;
   --md-sys-color-on-primary: #241a05;
-  --md-sys-color-surface: #1b1a16;
-  --md-sys-color-surface-container: #1b1a16;
-  --md-sys-color-surface-container-high: #24221c;
-  --md-sys-color-surface-container-highest: #2c2a23;
+  --md-sys-color-surface: #12110f;
+  --md-sys-color-surface-container: #12110f;
+  --md-sys-color-surface-container-high: #15140f;
+  --md-sys-color-surface-container-highest: #1e1c17;
   --md-sys-color-on-surface: #f4eee0;
   --md-sys-color-on-surface-variant: #c3b79c;
   --md-sys-color-outline: rgba(232, 191, 85, 0.4);
@@ -43,7 +43,7 @@ body {
   min-height: 100vh;
   color: var(--ink);
   font: 16px/1.6 -apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", Arial, sans-serif;
-  background: radial-gradient(120% 50% at 50% -10%, rgba(232, 191, 85, 0.15), transparent 60%), var(--bg);
+  background: radial-gradient(120% 50% at 50% -10%, rgba(232, 191, 85, 0.10), transparent 60%), var(--bg);
   -webkit-font-smoothing: antialiased;
 }
 main { max-width: 680px; margin: 0 auto; padding: 40px 16px 64px; }
@@ -56,7 +56,7 @@ header { text-align: center; margin-bottom: 30px; }
 h1 { margin: 0; font-size: clamp(26px, 6vw, 34px); line-height: 1.2; letter-spacing: -0.02em; font-weight: 700; }
 .lede { margin: 10px auto 0; max-width: 34em; color: var(--ink-2); }
 
-.panel { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin-bottom: 14px; }
+.panel { background: radial-gradient(120% 70% at 50% -15%, rgba(232, 191, 85, 0.11), transparent 60%), #12110f; border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin-bottom: 14px; }
 h2 { margin: 0 0 12px; font-size: 18px; font-weight: 650; }
 
 .boards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

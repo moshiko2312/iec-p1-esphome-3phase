@@ -214,9 +214,9 @@ function duration(sec) {
 /* ---------- styles ---------- */
 const CSS = `
 :root {
-  --bg: #12110f;
-  --panel: #1b1a16;
-  --panel-2: #24221c;
+  --bg: #080807;
+  --panel: #12110f;
+  --panel-2: #12110f;
   --line: rgba(232, 191, 85, 0.16);
   --line-2: rgba(232, 191, 85, 0.32);
   --ink: #f4eee0;
@@ -245,7 +245,7 @@ body {
   font: 15px/1.5 -apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", "Arial Hebrew", Arial, sans-serif;
   font-variant-numeric: tabular-nums;
   background:
-    radial-gradient(120% 60% at 50% -10%, rgba(232, 191, 85, 0.13), transparent 60%),
+    radial-gradient(120% 50% at 50% -10%, rgba(232, 191, 85, 0.10), transparent 60%),
     var(--bg);
   -webkit-font-smoothing: antialiased;
 }
@@ -304,7 +304,7 @@ button { cursor: pointer; }
   padding: 4px;
   margin: 0 0 16px;
   border-radius: 14px;
-  background: rgba(27, 26, 22, 0.86);
+  background: rgba(18, 17, 15, 0.88);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--line);
@@ -325,7 +325,7 @@ button { cursor: pointer; }
 
 /* panels */
 .panel {
-  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  background: radial-gradient(120% 70% at 50% -15%, rgba(232, 191, 85, 0.11), transparent 60%), #12110f;
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   padding: 16px;
@@ -510,7 +510,7 @@ class EspApp extends HTMLElement {
     }
     const tc = document.createElement("meta");
     tc.name = "theme-color";
-    tc.content = "#12110f";
+    tc.content = "#080807";
     document.head.appendChild(tc);
     const st = document.createElement("style");
     st.textContent = CSS;
